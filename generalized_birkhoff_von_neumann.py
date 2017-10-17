@@ -39,7 +39,7 @@ tolerance = np.finfo(np.float).eps * 10
 #this. bihierarcyy_test shall be invoked by generalized_berkhoff_con_neumann_decomposition, and so the latter function
 #(which performs the decomposition) will also warn about these issues.
 
-def bihierarchy_test(constraint_structure):
+def bihierarchy_test(X, constraint_structure):
   for key, value in constraint_structure.items():
     if sum([X[i] for i in key]) < value[0] or sum([X[i] for i in key]) > value[1]:
       print("impossible constraint structure capacities")
@@ -114,8 +114,14 @@ def generalized_birkhoff_von_neumann_iterator(H):
   gamma = push_reverse_pull_forward/(push_forward_pull_reverse + push_reverse_pull_forward)
   return([(G1,p*gamma), (G2,p*(1-gamma))])
 
-
-
+#generalized_birkhoff_von_neumann_decomposition takes the primitives, a starting matrix X (a numpy array) and
+#a constraint structure constraint_structure (a dictionary, whose structure is described in the examples above).
+#First, it applies bihierarchy_test to these primitives (see above for what this does). Then, if all is okay at the
+#first step, it represents these primitives as a weighted, directed graph and then iteratively applies 
+#generalized_birkhoff_von_neumann_iterator. Finally, it cleans the solution, transforming the
+#final iteration directed, weighted graphs to basis matrices, merging duplicate basis matrices and their probabilities,
+#checking that the probabilities form a distribution, and checking that the average of the basis matricies under this
+#distribution is indeed the starting matrix X
 
 def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
   #

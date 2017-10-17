@@ -1,6 +1,7 @@
 #generalized_birkhoff_von_neumann.py decomposes a matrix into a weighted average of basis matrices with integer coefficients
 #satisfying imposed constraints. When the starting matrix is doubly stochastic and the basis matrices are restricted to
-#be permutation matrices, this is the classical birkhoff_von_neumann decomposition. Formally, we implement the algorithm #identified in Budish, Che, Kojima, and Milgrom (2013). Thus, the constraint structure must form what they call a bihierarchy.
+#be permutation matrices, this is the classical birkhoff_von_neumann decomposition. Formally, we implement the algorithm 
+#identified in Budish, Che, Kojima, and Milgrom (2013). Thus, the constraint structure must form what they call a bihierarchy.
 #
 # Copyright 2017 Aubrey Clark.
 #

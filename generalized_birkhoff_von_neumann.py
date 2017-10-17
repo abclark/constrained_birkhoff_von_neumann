@@ -34,7 +34,10 @@ tolerance = np.finfo(np.float).eps * 10
 #X = np.array([[.3, .7], [.7,.3]])
 #constraint_structure = {frozenset({(0, 1),(1,0)}): (1,1), frozenset({(1, 0),(1,1)}): (1,1)}
 
-#need to assign the min and max capacity attributes to every edge, except to and from whole set
+#bihierarchy_test decomposes the constraint structure into a bihierarchy if it is one. if the constraint structure is not
+#a bihierarchy or the matrix X does not satisfy the constraint structure to begin with, then bihierarchy_test will tell you 
+#this. bihierarcyy_test shall be invoked by generalized_berkhoff_con_neumann_decomposition, and so the latter function
+#(which performs the decomposition) will also warn about these issues.
 
 def bihierarchy_test(constraint_structure):
   for key, value in constraint_structure.items():
@@ -59,6 +62,13 @@ def bihierarchy_test(constraint_structure):
     else:
       print("constraint structure cannot be decomposed into a bihierarchy")
 
+#generalized_birkhoff_von_neumann_iterator is the core step in the decomposition. After the starting matrix X and the
+#constraint structure have been represented as a weighted, directed graph G, this function takes as input a list H = [(G,p)]
+#(where p is a probability, which is initially one) and will decompose the graph into two such graphs, 
+#each with an associated probability, and each of which are closer to representing a basis matrix.
+#Seqential iteration, which is done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the final
+#decomposition
+      
 def generalized_birkhoff_von_neumann_iterator(H):
   tolerance = np.finfo(np.float).eps * 10
   #

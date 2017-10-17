@@ -17,6 +17,7 @@ import numpy as np
 import copy
 import itertools
 import math
+from pprint import pprint
 
 #numbers in some arrays will be rounded to the nearest integer if within the following tolerance
 tolerance = np.finfo(np.float).eps * 10
@@ -212,5 +213,5 @@ def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
     assignments.append(Y)
     coefficients.append(a[1])
   #
-  sum(i[1]*i[0] for i in zip(coefficients, assignments))
+  pprint([coefficients, assignments, sum(coefficients), sum(i[1]*i[0] for i in zip(coefficients, assignments))])
 

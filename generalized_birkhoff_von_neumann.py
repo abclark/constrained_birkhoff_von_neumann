@@ -1,20 +1,13 @@
-# generalized_birkhoff.py - decompose a doubly stochastic matrix into permutation matrices
+#generalized_birkhoff_von_neumann.py decomposes a matrix into a weighted average of basis matrices with integer coefficients
+#satisfying imposed constraints. When the starting matrix is doubly stochastic and the basis matrices are restricted to
+#be permutation matrices, this is the classical birkhoff_von_neumann decomposition. Formally, we implement the algorithm #identified in Budish, Che, Kojima, and Milgrom (2013). Thus, the constraint structure must form what they call a bihierarchy.
 #
 # Copyright 2017 Aubrey Clark.
 #
-#
-# Birkhoff is free software: you can redistribute it and/or modify it under the
+# generalized_birkhoff_von_neumann is free software: you can redistribute it and/or modify it under the
 # terms of the GNU General Public License as published by the Free Software
 # Foundation, either version 3 of the License, or (at your option) any later
 # version.
-# Imports from built-in libraries.
-from __future__ import division
-import itertools
-
-# Imports from third-party libraries.
-from networkx import from_numpy_matrix
-from networkx.algorithms.bipartite.matching import maximum_matching
-import numpy as np
 
 #: The current version of this package.
 __version__ = '0.0.1-dev'
@@ -25,8 +18,15 @@ import copy
 import itertools
 import math
 
-#numbers in some arrays will be rounded to the nearest integer if within tolerance of that integer
+#numbers in some arrays will be rounded to the nearest integer if within the following tolerance
 tolerance = np.finfo(np.float).eps * 10
+
+#Example matrix and constraint structures. X is the matrix we wish to decompose into a weighted
+#average of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the basis matrices
+#(the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the (0,0),(0,1),(0,2) 
+#coordinates), and whose keys refer to the minimum and maximum sum of these entries in each of the basis matrices 
+#(e.g. the value (1,1) means that the coordinates that this value's key represents sum to exactly one in each 
+#of the basis matrices.)
 
 #X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
 #constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,1), frozenset({(1, 0), (1, 1), (1,2)}):(1,1), frozenset({(2, 0), (2, 1), (2,2)}):(1,1), frozenset({(3, 0), (3, 1), (3,2)}):(1,1), frozenset({(0, 0), (1, 0), (2,0), (3,0)}):(1,2),  frozenset({(0, 1), (1, 1), (2,1), (3,1)}):(1,1), frozenset({(0, 2), (1, 2), (2,2), (3,2)}):(1,1), frozenset({(0, 0), (1, 0)}):(1,1)}
@@ -56,6 +56,8 @@ def bihierarchy_test(constraint_structure):
       target.append(idx)
     if len(listofA) + len(listofB) == len(c):
       return [[c[i] for i in listofA], [c[i] for i in listofB]]
+    else:
+      print("constraint structure cannot be decomposed into a bihierarchy")
 
 def generalized_birkhoff_von_neumann_iterator(H):
   tolerance = np.finfo(np.float).eps * 10

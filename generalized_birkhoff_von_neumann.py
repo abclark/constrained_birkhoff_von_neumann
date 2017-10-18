@@ -33,7 +33,7 @@ tolerance = np.finfo(np.float).eps * 10
 #constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,1), frozenset({(1, 0), (1, 1), (1,2)}):(1,1), frozenset({(2, 0), (2, 1), (2,2)}):(1,1), frozenset({(3, 0), (3, 1), (3,2)}):(1,1), frozenset({(0, 0), (1, 0), (2,0), (3,0)}):(1,2),  frozenset({(0, 1), (1, 1), (2,1), (3,1)}):(1,1), frozenset({(0, 2), (1, 2), (2,2), (3,2)}):(1,1), frozenset({(0, 0), (1, 0)}):(1,1)}
 
 #X = np.array([[.3, .7], [.7,.3]])
-#constraint_structure = {frozenset({(0, 1),(1,0)}): (1,1), frozenset({(1, 0),(1,1)}): (1,1)}
+#constraint_structure = {frozenset({(0, 1),(1,0)}): (1,2), frozenset({(1, 0),(1,1)}): (1,1)}
 
 #bihierarchy_test decomposes the constraint structure into a bihierarchy, if it is one. If the constraint structure is not
 #a bihierarchy or the starting matrix X does not abide by the constraint structure to begin with, bihierarchy_test will tell 
@@ -41,6 +41,9 @@ tolerance = np.finfo(np.float).eps * 10
 #(which performs the decomposition) will warn about these issues.
 
 def bihierarchy_test(X, constraint_structure):
+  S = {index for index, x in np.ndenumerate(X)}
+  if any(X[i]<0 or X[i]>1 for i in S):
+    print("matrix entries must be between zero and one")
   for key, value in constraint_structure.items():
     if sum([X[i] for i in key]) < value[0] or sum([X[i] for i in key]) > value[1]:
       print("impossible constraint structure capacities")
@@ -70,15 +73,15 @@ def bihierarchy_test(X, constraint_structure):
 #Seqential iteration, done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the
 #decomposition.
       
-def generalized_birkhoff_von_neumann_iterator(H):
+def generalized_birkhoff_von_neumann_iterator(X,H):
   tolerance = np.finfo(np.float).eps * 10
-  #
+  S = {index for index, x in np.ndenumerate(X)}
   (G, p) = H.pop(0)
   #
   #remove edges with integer weights
   #extracts all edges satisfy the weight threshold:
   #
-  eligible_edges = [(from_node,to_node,edge_attributes) for from_node,to_node,edge_attributes in G.edges(data=True) if all(i+tolerance < edge_attributes['weight'] or edge_attributes['weight'] < i - tolerance for i in range(0,math.floor(sum(sum(X) ) ) ) ) ]
+  eligible_edges = [(from_node,to_node,edge_attributes) for from_node,to_node,edge_attributes in G.edges(data=True) if from_node == frozenset(S) or to_node == frozenset(S) or all(i+tolerance < edge_attributes['weight'] or edge_attributes['weight'] < i - tolerance for i in range(0,math.floor(sum(sum(X) ) ) ) ) ]
   #
   K = nx.DiGraph()
   K.add_edges_from(eligible_edges)
@@ -130,7 +133,7 @@ def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
   tolerance = np.finfo(np.float).eps * 10
   S = {index for index, x in np.ndenumerate(X)}
   #
-  A,B = bihierarchy_test(constraint_structure)
+  A,B = bihierarchy_test(X, constraint_structure)
   A.append(S), B.append(S)
   #
   for x in S:
@@ -161,7 +164,7 @@ def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
   #
   while len(H) > 0:
     if any(tolerance < x < 1 - tolerance for x in [d['weight'] for (u,v,d) in H[0][0].edges(data=True) if u in [frozenset({x}) for x in S]]):
-      H.extend(generalized_birkhoff_von_neumann_iterator([H.pop(0)]))
+      H.extend(generalized_birkhoff_von_neumann_iterator(X,[H.pop(0)]))
     else:
       solution.append(H.pop(0))
   #
@@ -214,5 +217,6 @@ def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
     assignments.append(Y)
     coefficients.append(a[1])
   #
+  return([coefficients, assignments, sum(coefficients), sum(i[1]*i[0] for i in zip(coefficients, assignments))])
   pprint([coefficients, assignments, sum(coefficients), sum(i[1]*i[0] for i in zip(coefficients, assignments))])
 

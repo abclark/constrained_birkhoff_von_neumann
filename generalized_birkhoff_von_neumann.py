@@ -23,10 +23,9 @@ from pprint import pprint
 #numbers in some arrays will be rounded to the nearest integer if within the following tolerance
 tolerance = np.finfo(np.float).eps * 10
 
-#Example matrix and constraint structures. X is the matrix we wish to decompose into a weighted
-#average of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the basis matrices
-#(the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the (0,0),(0,1),(0,2) 
-#coordinates), and whose keys refer to the minimum and maximum sum of these entries in each of the basis matrices 
+#Below are two example startitng matrices X and two corresponding constraint structures. X is the matrix we wish to decompose 
+#into a weighted average of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the #basis matrices (the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the (0,0),
+#(0,1),(0,2) coordinates), and whose keys refer to the minimum and maximum sum of these entries in each of the basis matrices 
 #(e.g. the value (1,1) means that the coordinates that this value's key represents sum to exactly one in each 
 #of the basis matrices.)
 
@@ -36,10 +35,10 @@ tolerance = np.finfo(np.float).eps * 10
 #X = np.array([[.3, .7], [.7,.3]])
 #constraint_structure = {frozenset({(0, 1),(1,0)}): (1,1), frozenset({(1, 0),(1,1)}): (1,1)}
 
-#bihierarchy_test decomposes the constraint structure into a bihierarchy if it is one. if the constraint structure is not
-#a bihierarchy or the matrix X does not satisfy the constraint structure to begin with, then bihierarchy_test will tell you 
-#this. bihierarcyy_test shall be invoked by generalized_berkhoff_con_neumann_decomposition, and so the latter function
-#(which performs the decomposition) will also warn about these issues.
+#bihierarchy_test decomposes the constraint structure into a bihierarchy, if it is one. If the constraint structure is not
+#a bihierarchy or the starting matrix X does not abide by the constraint structure to begin with, bihierarchy_test will tell 
+#you. bihierarcy_test will be invoked by generalized_berkhoff_con_neumann_decomposition, and so the latter function
+#(which performs the decomposition) will warn about these issues.
 
 def bihierarchy_test(X, constraint_structure):
   for key, value in constraint_structure.items():
@@ -66,10 +65,10 @@ def bihierarchy_test(X, constraint_structure):
 
 #generalized_birkhoff_von_neumann_iterator is the core step in the decomposition. After the starting matrix X and the
 #constraint structure have been represented as a weighted, directed graph G, this function takes as input a list H = [(G,p)]
-#(where p is a probability, which is initially one) and will decompose the graph into two such graphs, 
+#(where p is a probability, initially one) and decomposes the graph into two graphs, 
 #each with an associated probability, and each of which are closer to representing a basis matrix.
-#Seqential iteration, which is done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the final
-#decomposition
+#Seqential iteration, done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the
+#decomposition.
       
 def generalized_birkhoff_von_neumann_iterator(H):
   tolerance = np.finfo(np.float).eps * 10
@@ -117,10 +116,11 @@ def generalized_birkhoff_von_neumann_iterator(H):
   return([(G1,p*gamma), (G2,p*(1-gamma))])
 
 #generalized_birkhoff_von_neumann_decomposition takes the primitives, a starting matrix X (a numpy array) and
-#a constraint structure constraint_structure (a dictionary, whose structure is described in the examples above).
-#First, it applies bihierarchy_test to these primitives (see above for what this does). Then, if all is okay at the
-#first step, it represents these primitives as a weighted, directed graph and then iteratively applies 
-#generalized_birkhoff_von_neumann_iterator. Finally, it cleans the solution, transforming the
+#a constraint structure constraint_structure (a dictionary, whose structure is described in the examples above)
+# and outputs a list of coefficients and basis matrices (each satisfying the constraints) such that the starting matrix is a
+#weighted sum of the basis matrices. It first applies bihierarchy_test to these primitives (see above for what this does).
+#Then, if all is okay at the first step, it represents these primitives as a weighted, directed graph and iteratively
+# applies generalized_birkhoff_von_neumann_iterator. Finally, it cleans the solution, transforming the
 #final iteration directed, weighted graphs to basis matrices, merging duplicate basis matrices and their probabilities,
 #checking that the probabilities form a distribution, and checking that the average of the basis matricies under this
 #distribution is indeed the starting matrix X

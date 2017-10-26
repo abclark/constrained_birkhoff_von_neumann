@@ -42,7 +42,6 @@ from pprint import pprint
 
 #global things
 tolerance = np.finfo(np.float).eps*10e10
-S = {index for index, x in np.ndenumerate(X)}
 
 #feasibity_test tests whether all entries of the starting matrix X are in [0,1]. This is essential since each basis matrix has entries
 #that are either zero or one 
@@ -195,5 +194,6 @@ def solution_cleaner(solution):
 #generalized_birkhoff_von_neumann_decomposition puts the pieces together
 
 def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
+  S = {index for index, x in np.ndenumerate(X)}
   feasibility_test(X,constraint_structure)
   return(solution_cleaner(iterator_of_generalized_birkhoff_von_neumann_iterator( graph_constructor(X, bihierarchy_test(constraint_structure) ) ) ) ) 

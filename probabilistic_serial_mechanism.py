@@ -1,21 +1,22 @@
-R = {0: [0,1], 1: [1,0]}
-
-import numpy as np
-
-y = np.zeros(np.shape(R)[1])
-m = np.ones(np.shape(R)[1])
-P = np.zeros(np.shape(R))
-
-while max(m) > 0:
-  for x in R:
-    y[x[0]] += 1
-  for x in R:
-    m[x[0]] -= 1/max(y)
-    P[x[1]] = P[]for z in P:
-      z[x[0]] += 1/max(y)
-  for x in R:
-    x = [a for a in x if a in [i for i in m if i > 0]]
-else:
-  print(P)
-
-  
+R = {0: [0,1,2], 1: [2,1,0], 3: [2,0,1]} 
+ 
+import numpy as np 
+ 
+m = np.ones(len(R[0])) 
+P = {0: [0,0,0], 1: [0,0,0], 3: [0,0,0]} 
+ 
+while max(m) > 0: 
+  for key,value in R.items(): 
+    R[key] = [i for i in value if m[i] != 0] 
+  y = np.zeros(len(m)) 
+  for key,value in R.items(): 
+    y[value[0]] += 1 
+  #time taken to deplete remaining mass 
+  z = [max(i,0.001)/max(j,0.0001) for i,j in zip(m,y)] 
+  #reduce masses  
+  for key,value in R.items(): 
+    m[value[0]] -= min(z) 
+    P[key][value[0]] += min(z)           
+else: 
+  print(P) 
+ 

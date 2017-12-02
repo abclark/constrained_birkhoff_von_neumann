@@ -9,10 +9,10 @@ Output is a dictionary P.
 
 A value of the output dictionary is a list whose entries are probabilities that the agent wins the 
 corresponding objects.
-E.g. for the dictionary R = {0: [0,1,2], 1: [2,1,0], 3: [2,0,1]}, there are three agents and three objects. 
+E.g. for the dictionary R = {0: [0,1,2], 1: [2,1,0]}, there are two agents and three objects. 
 Agent 1 ranks object 2 above object 1 above object 0. 
-Output for this dictionary is P = {0: [0.75, 0.25, 0], 1: [0, 0.5, 0.5], 3: [0.25, 0.25, 0.5]}. 
-Agent 0 has a 0.75 probability of winning object 0.
+Output for this dictionary is P = {0: array([ 1. ,  0.5,  0. ]), 1: array([ 0. ,  0.5,  1. ])}. 
+Agent 0 wins object 0 with probability 1 and object 1 with probability 0.5.
 
 Copyright 2017 Aubrey Clark.
 

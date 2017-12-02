@@ -17,7 +17,7 @@ generalized_birkhoff_von_neumann is free software: you can redistribute it and/o
 under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or (at your option) any later version.
 
-Below are two example startitng matrices X and two corresponding constraint structures. X is the matrix we wish to decompose 
+Below are two example starting matrices X and two corresponding constraint structures. X is the matrix we wish to decompose 
 into a weighted average of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the 
 basis matrices (the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the 
 (0,0),(0,1),(0,2) coordinates), and whose keys refer to the minimum and maximum alowed sum of these entries in each of the basis matrices 

@@ -7,12 +7,12 @@ A key of this dictionary corresponds to an agent,
 a value the agent's rank order list of the objects. 
 Output is a dictionary P. 
 
-A value of the output dictionary is a list whose entry is the probability that the agent wins the object 
-corresponding to that entry.
+A value of the output dictionary is a list whose entries are probabilities that the agent wins the 
+corresponding objects.
 E.g. for the dictionary R = {0: [0,1,2], 1: [2,1,0], 3: [2,0,1]}, there are three agents and three objects. 
 Agent 1 ranks object 2 above object 1 above object 0. 
-Output for this dictionary is P = {0: [0.75, 0.25, 0], 1: [0, 0.5, 0.5], 3: [0.25, 0.25, 0.5]}, 
-under which agent 0 has a 0.75 probability of winning object 0.
+Output for this dictionary is P = {0: [0.75, 0.25, 0], 1: [0, 0.5, 0.5], 3: [0.25, 0.25, 0.5]}. 
+Agent 0 has a 0.75 probability of winning object 0.
 
 Copyright 2017 Aubrey Clark.
 

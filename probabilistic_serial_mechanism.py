@@ -35,7 +35,7 @@ while max(m) > 0:
   for key,value in R.items():
     y[value[0]] += 1
   #time taken to deplete remaining masses
-  z = [max(i,0.001)/max(j,0.0001) for i,j in zip(m,y)]
+  z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(m,y)]
   #reduce and allocate masses
   for key,value in R.items():
     m[value[0]] -= min(z)

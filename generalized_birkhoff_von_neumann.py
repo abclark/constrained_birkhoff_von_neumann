@@ -13,7 +13,7 @@ The constraints must form what they call a bihierarchy.
 
 Copyright 2017 Aubrey Clark.
 
-generalized_birkhoff_von_neumann is free software (free as in freedom): you can redistribute it and/or modify it 
+generalized_birkhoff_von_neumann is free software: you can redistribute it and/or modify it 
 under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or (at your option) any later version.
 

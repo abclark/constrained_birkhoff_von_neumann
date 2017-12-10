@@ -15,7 +15,7 @@ generalized_birkhoff_von_neumann is free software: you can redistribute it and/o
 under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or (at your option) any later version.
 
-Below are two example starting matrices X and two corresponding constraint structures. X is the matrix we wish to decompose 
+Below are two example target matrices X and two corresponding constraint structures. X is the matrix we wish to decompose 
 into a weighted sum of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the 
 basis matrices (the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the 
 (0,0),(0,1),(0,2) coordinates), and whose keys refer to the minimum and maximum alowed sum of these entries in each of the basis matrices 
@@ -41,7 +41,7 @@ from pprint import pprint
 #global things
 tolerance = np.finfo(np.float).eps*10e10
 
-#feasibity_test tests whether all entries of the starting matrix X are in [0,1]. 
+#feasibity_test tests whether all entries of the target matrix X are in [0,1]. 
 #Essential since each basis matrix has entries that are either zero or one.
 def feasibility_test(X, constraint_structure):
   S = {index for index, x in np.ndenumerate(X)}
@@ -74,7 +74,7 @@ def bihierarchy_test(constraint_structure):
       return [[constraint_set_ordering[i] for i in listofA], [constraint_set_ordering[i] for i in listofB]]
   print("this constraint structure is not a bihierarchy")
 
-#graph_constructor takes a starting matrix X and a bihierarchy = [A,B],
+#graph_constructor takes a target matrix X and a bihierarchy = [A,B],
 #constructs a directed weighted graph G
 def graph_constructor(X,bihierarchy):
   S = {index for index, x in np.ndenumerate(X)}
@@ -100,7 +100,7 @@ def graph_constructor(X,bihierarchy):
   return(G)
 
 #generalized_birkhoff_von_neumann_iterator is the main step.
-#After starting matrix X and constraint structure have been represented as a weighted directed graph G, 
+#After target matrix X and constraint structure have been represented as a weighted directed graph G, 
 #this function takes as input a list H = [(G,p)] (where p is a probability, initially one) 
 #and decomposes the graph into two graphs, each with an associated probability, 
 #and each of which are closer to representing a basis matrix. Seqential iteration, 

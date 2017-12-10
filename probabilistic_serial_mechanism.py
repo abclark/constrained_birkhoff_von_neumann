@@ -23,23 +23,23 @@ either version 3 of the License, or (at your option) any later version.
 
 import numpy as np
 
-m = np.ones(len(R[0]))
-P={}
-for key, value in R.items():
-  P[key]=np.zeros(len(value))
-
-while max(m) > 0:
-  for key,value in R.items():
-    R[key] = [i for i in value if m[i] != 0]
-  y = np.zeros(len(m))
-  for key,value in R.items():
-    y[value[0]] += 1
-  #time taken to deplete remaining masses
-  z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(m,y)]
-  #reduce and allocate masses
-  for key,value in R.items():
-    m[value[0]] -= min(z)
-    P[key][value[0]] += min(z)  
-else:
-  print(P)
+def probabilistic_serial_mechanism(R):
+  m = np.ones(len(R[0]))
+  P={}
+  for key, value in R.items():
+    P[key]=np.zeros(len(value))
+  while max(m) > 0:
+    for key,value in R.items():
+      R[key] = [i for i in value if m[i] != 0]
+    y = np.zeros(len(m))
+    for key,value in R.items():
+      y[value[0]] += 1
+    #time taken to deplete remaining masses
+    z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(m,y)]
+    #reduce and allocate masses
+    for key,value in R.items():
+      m[value[0]] -= min(z)
+      P[key][value[0]] += min(z)  
+  else:
+    return(P)
  

@@ -2,11 +2,9 @@
 =======================================
 generalized_birkhoff_von_neumann.py 
 =======================================
-decomposes a matrix into a weighted average of basis matrices whose entries are zero or one and 
-satisfying constraints imposed by the user. 
+Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user imposed constraints. 
 
-When the starting matrix is doubly stochastic and the basis matrices are restricted to
-be permutation matrices, this is the classical Birkhoff von_Neumann decomposition. 
+When the starting matrix is doubly stochastic and the basis matrices are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
 
 Here we implement the algorithm identified in Budish, Che, Kojima, and Milgrom (2013). 
 The constraints must form what they call a bihierarchy.
@@ -18,7 +16,7 @@ under the terms of the GNU General Public License as published by the Free Softw
 either version 3 of the License, or (at your option) any later version.
 
 Below are two example starting matrices X and two corresponding constraint structures. X is the matrix we wish to decompose 
-into a weighted average of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the 
+into a weighted sum of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the 
 basis matrices (the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the 
 (0,0),(0,1),(0,2) coordinates), and whose keys refer to the minimum and maximum alowed sum of these entries in each of the basis matrices 
 (e.g. the value (1,1) means that the coordinates that this value's key represents sum to exactly one in each of the basis matrices.)
@@ -42,11 +40,9 @@ from pprint import pprint
 
 #global things
 tolerance = np.finfo(np.float).eps*10e10
-#X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
-#constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,1), frozenset({(1, 0), (1, 1), (1,2)}):(1,1), frozenset({(2, 0), (2, 1), (2,2)}):(1,1), frozenset({(3, 0), (3, 1), (3,2)}):(1,1), frozenset({(0, 0), (1, 0), (2,0), (3,0)}):(1,2),  frozenset({(0, 1), (1, 1), (2,1), (3,1)}):(1,1), frozenset({(0, 2), (1, 2), (2,2), (3,2)}):(1,1), frozenset({(0, 0), (1, 0)}):(1,1)}
 
-#feasibity_test tests whether all entries of the starting matrix X are in [0,1]. This is essential since each basis matrix has entries
-#that are either zero or one 
+#feasibity_test tests whether all entries of the starting matrix X are in [0,1]. 
+#Essential since each basis matrix has entries that are either zero or one.
 def feasibility_test(X, constraint_structure):
   S = {index for index, x in np.ndenumerate(X)}
   if any(X[i]<0 or X[i]>1 for i in S):
@@ -55,9 +51,10 @@ def feasibility_test(X, constraint_structure):
     if sum([X[i] for i in key]) < value[0] or sum([X[i] for i in key]) > value[1]:
       print("matrix entries must respect constraint structure capacities")
  
-#bihierarchy_test attempts to decompose the sets of the constraint structure into a bihierarchy, and informs the user if this is not possible.
+#bihierarchy_test attempts to decompose the constraint structure into a bihierarchy.
+#The user is informed if this is not possible.
 #Unfortunately, its success depends on the order of the constraint structure sets.
-#Consequently, the function considers all permutations of these sets whenever the constraint structure is not a bihierarchy.
+#So, it must considers all permutations of these sets when the constraint structure is not a bihierarchy.
 def bihierarchy_test(constraint_structure):
   constraint_sets = []
   for key, value in constraint_structure.items():
@@ -75,10 +72,10 @@ def bihierarchy_test(constraint_structure):
       target.append(idx)
     if len(listofA) + len(listofB) == len(constraint_sets):
       return [[constraint_set_ordering[i] for i in listofA], [constraint_set_ordering[i] for i in listofB]]
-  print("constraint structure cannot be decomposed into a bihierarchy")
+  print("this constraint structure is not a bihierarchy")
 
-#graph_constructor takes a starting matrix X and a bihierarchy= [A,B] and constructs a directed and weighted graph G that will be used
-#to generate the decomposition 
+#graph_constructor takes a starting matrix X and a bihierarchy = [A,B],
+#constructs a directed weighted graph G
 def graph_constructor(X,bihierarchy):
   S = {index for index, x in np.ndenumerate(X)}
   A, B = bihierarchy
@@ -102,13 +99,12 @@ def graph_constructor(X,bihierarchy):
     G.add_edge(frozenset({index}), (frozenset({index}),'p'), weight=x, min_capacity = 0, max_capacity = 1)
   return(G)
 
-#generalized_birkhoff_von_neumann_iterator is the core step in the decomposition. 
-#After the starting matrix X and the constraint structure have been represented as a weighted, directed graph G, 
-#this function takes as input a list H = [(G,p)]
-#(where p is a probability, initially one) and decomposes the graph into two graphs, 
-#each with an associated probability, and each of which are closer to representing a basis matrix.
-#Seqential iteration, done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the
-#decomposition.
+#generalized_birkhoff_von_neumann_iterator is the main step.
+#After starting matrix X and constraint structure have been represented as a weighted directed graph G, 
+#this function takes as input a list H = [(G,p)] (where p is a probability, initially one) 
+#and decomposes the graph into two graphs, each with an associated probability, 
+#and each of which are closer to representing a basis matrix. Seqential iteration, 
+#done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the decomposition.
 def generalized_birkhoff_von_neumann_iterator(H):
   (G, p) = H.pop(0)
   #remove edges with integer weights
@@ -146,9 +142,9 @@ def generalized_birkhoff_von_neumann_iterator(H):
   gamma = min([1,max([0,push_reverse_pull_forward/(push_forward_pull_reverse + push_reverse_pull_forward)])])
   return([(G1,p*gamma), (G2,p*(1-gamma))])
 
-#iterator_of_generalized_birkhoff_von_neumann_iterator iterates generalized_birkhoff_von_neumann_iterator, initially on the weighted directed graph 
-#(and probability) [(G,1)] where G is given by graph_constructor, and then on its children until each terminal node of the tree generated by this process  
-#represents a basis matrix modulo tolerance
+#iterator_of_generalized_birkhoff_von_neumann_iterator iterates generalized_birkhoff_von_neumann_iterator, 
+#initially on the weighted directed graph (and probability) [(G,1)] where G is given by graph_constructor, 
+#and then on its children, until the terminal nodes of the tree, which each represents a basis matrix (modulo tolerance)
 def iterator_of_generalized_birkhoff_von_neumann_iterator(X, G):
   S = {index for index, x in np.ndenumerate(X)}
   H=[(G,1)]
@@ -160,7 +156,7 @@ def iterator_of_generalized_birkhoff_von_neumann_iterator(X, G):
       solution.append(H.pop(0))
   return(solution)
 
-#solution_cleaner takes the solution, which comes in the form of a collection of weighted and directed graphs and probabilities. The central column of each graph corresponds to a basis matrix and the probability attached to the graph corresponds to the probability assigned to that basis matrix. solution_cleaner rounds the entries of the basis matrices according to tolerance so that each entry is either zero or one, merges duplicate basis matrices, and then converts the solution to a list whose first entry is the distribution over basis batrices, whose second entry is the list of basis matrices, and whose third and fourth entry are checks that the coefficients sum to one and that the average of the basis matrices is indeed the target matrix X 
+#solution_cleaner takes the solution, which comes in the form of a collection of weighted and directed graphs and probabilities. The central column of each graph corresponds to a basis matrix and the probability attached to the graph corresponds to the probability assigned to that basis matrix. solution_cleaner rounds the entries of the basis matrices according to tolerance so that each entry is either zero or one, merges duplicate basis matrices, and then converts the solution to a list whose first entry is the distribution over basis matrices, whose second entry is the list of basis matrices, and whose third and fourth entry are checks that the coefficients sum to one and that the average of the basis matrices is indeed the target matrix X 
 def solution_cleaner(X, solution):
   S = {index for index, x in np.ndenumerate(X)}
   solution_columns_and_probs = []

@@ -1,3 +1,6 @@
+ <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_SVG">
+    </script>
+
 # generalized_birkhoff_von_neumann
 <section>
 

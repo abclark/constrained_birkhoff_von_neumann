@@ -1,6 +1,6 @@
 # generalized_birkhoff_von_neumann
 <section>
-        <h1>Birkhoff-von Neumann decomposition with constraints</h1>
+
 
         <p><em>View the <a href="https://github.com/abclark/generalized_birkhoff_von_neumann">source of this content</a>.</em></p>
 

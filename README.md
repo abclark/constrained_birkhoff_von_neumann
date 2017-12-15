@@ -1,8 +1,7 @@
+# generalized_birkhoff_von_neumann
+
  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_SVG">
     </script>
-
-# generalized_birkhoff_von_neumann
-<section>
 
 <p>Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user-imposed constraints. When the starting matrix is doubly stochastic and the basis matrices are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
 Here we implement the algorithm identified in <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>. 

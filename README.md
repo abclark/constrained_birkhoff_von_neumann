@@ -1,20 +1,17 @@
 # generalized_birkhoff_von_neumann
 <section>
 
-
-        <p><em>View the <a href="https://github.com/abclark/generalized_birkhoff_von_neumann">source of this content</a>.</em></p>
-
-        <p>Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user-imposed constraints. When the starting matrix is doubly stochastic and the basis matrices are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
+<p>Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user-imposed constraints. When the starting matrix is doubly stochastic and the basis matrices are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
 Here we implement the algorithm identified in <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>. 
 The constraints must form what they call a bihierarchy.</p>
 
-        <h2>Installation</h2>
+<h2>Installation</h2>
         
-        <pre><code>pip install generalized_birkhoff_von_neumann</code></pre>
+<pre><code>pip install generalized_birkhoff_von_neumann</code></pre>
         
-        <h2>Basic usage</h2>
+<h2>Basic usage</h2>
         
-        <pre><code>import numpy as np
+<pre><code>import numpy as np
 from generalized_birkhoff_von_neumann import generalized_birkhoff_von_neumann_decomposition
 
 # Create a matrix whose entries are between 0 and 1, and a constraint structure. 
@@ -31,13 +28,13 @@ from generalized_birkhoff_von_neumann import generalized_birkhoff_von_neumann_de
 generalized_birkhoff_von_neumann_decomposition(X, constraint_structure)
 </code></pre>
         
-        <h2>Mathematical background</h2>
+<h2>Mathematical background</h2>
        
-        <p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
+<p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
 
 <h2>API</h2>
         
- <pre><code>>>> import numpy as np
+<pre><code>>>> import numpy as np
 >>> from generalized_birkhoff_von_neumann import generalized_birkhoff_von_neumann_decomposition
 >>> X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
 >>> constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,1), frozenset({(1, 0), (1, 1), (1,2)}):(1,1), frozenset({(2, 0), (2, 1), (2,2)}):(1,1), frozenset({(3, 0), (3, 1), (3,2)}):(1,1), frozenset({(0, 0), (1, 0), (2,0), (3,0)}):(1,2), frozenset({(0, 1), (1, 1), (2,1), (3,1)}):(1,1), frozenset({(0, 2), (1, 2), (2,2), (3,2)}):(1,1), frozenset({(0, 0), (1, 0)}):(1,1)}
@@ -86,11 +83,11 @@ array([[ 0.5,  0.2,  0.3],
         
 <h3>Installation</h3>
         
-        <pre><code>pip install probabilistic_serial_mechanism</code></pre>
+<pre><code>pip install probabilistic_serial_mechanism</code></pre>
         
 <h3>Basic usage</h3>
         
-        <pre><code># Create a dictionary R with agents as keys and rank order lists as values.
+<pre><code># Create a dictionary R with agents as keys and rank order lists as values.
 #
 #For example:
 #
@@ -98,9 +95,9 @@ array([[ 0.5,  0.2,  0.3],
 
 probabilistic_serial_mechanism(R)</code></pre>
         
-        <h3>Mathematical background</h3>
+<h3>Mathematical background</h3>
        
-        <p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
+<p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
 
 <h3>API</h3>
         

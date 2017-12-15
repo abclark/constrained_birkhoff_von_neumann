@@ -1,7 +1,5 @@
 # generalized_birkhoff_von_neumann
 
- <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_SVG">
-    </script>
 
 <p>Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user-imposed constraints. When the starting matrix is doubly stochastic and the basis matrices are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
 Here we implement the algorithm identified in <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>. 
@@ -75,11 +73,11 @@ array([[ 0.5,  0.2,  0.3],
 
 <h2>Application: probabilistic serial mechanism with constraints</h2>        
         
-<p>There are \(n\) objects to be allocated among \(m\) agents. Each agent has a ranking of the objects. The probability of agent \(i\) winning object \(j\) is derived from the following process. Agents simultaneously and at the same speed 'eat' probability mass of their top ranked item for which probability mass still exists. The resulting probabilities can be collected in an \(m \times n\) matrix \(X\) whose entry in its \(i\)'th row and \(j\)'th column is the probability that agent \(i\) wins object \(j\).</p>
+<p>There are <code>n</code> objects to be allocated among <code>m</code> agents. Each agent has a ranking of the objects. The probability of agent <code>i</code> winning object <code>j</code> is derived from the following process. Agents simultaneously and at the same speed 'eat' probability mass of their top ranked item for which probability mass still exists. The resulting probabilities can be collected in an <code>m \times n</code> matrix <code>X</code> whose entry in its <code>i</code>'th row and <code>j</code>'th column is the probability that agent <code>i</code> wins object <code>j</code>.</p>
         
-<p>To implement the probabilities of \(X\), one needs to find the right probability distribution over allocations (full descriptions of who gets what). An allocation may be represented as a matrix with binary entries, a \(1\) in the \(i\)'th row and \(j\)'th column meaning that agent \(i\) wins object \(j\) and a \(0\) meaning that agent \(i\) does not win object \(j\). If \(n=m\), such a matrix is a permutation matrix. Further, \(X\) will be doubly stochastic and so the problem may be solved using the classical Birkhoff-von Neumann decomposition.</p>
+<p>To implement the probabilities of <code>X</code>, one needs to find the right probability distribution over allocations (full descriptions of who gets what). An allocation may be represented as a matrix with binary entries, a <code>1</code> in the <code>i</code>'th row and <code>j</code>'th column meaning that agent <code>i</code> wins object <code>j</code> and a <code>0</code> meaning that agent <code>i</code> does not win object <code>j</code>. If <code>n=m</code>, such a matrix is a permutation matrix. Further, <code>X</code> will be doubly stochastic and so the problem may be solved using the classical Birkhoff-von Neumann decomposition.</p>
   
-<p>For \(n\neq m\) or to impose additional constraints (e.g. each agent is allocated at least one object, no agent is allocated more than \(k\) objects, etc), apply <code>generalized_birkhoff_von_neumann_decomposition</code>.</p>
+<p>For <code>n\neq m</code> or to impose additional constraints (e.g. each agent is allocated at least one object, no agent is allocated more than <code>k</code> objects, etc), apply <code>generalized_birkhoff_von_neumann_decomposition</code>.</p>
 
 <p>To run the probabilistic serial mechanism, follow the instructions below.</p> 
         

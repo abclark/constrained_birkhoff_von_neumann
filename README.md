@@ -100,7 +100,7 @@ probabilistic_serial_mechanism(R)</code></pre>
 <p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
 
 <h3>API</h3>
-        
+         
  <pre><code>>>> from probabilistic_serial_mechanism import probabilistic_serial_mechanism
 >>> R = {0: [0,1,2], 1: [2,1,0]}
 >>> probabilistic_serial_mechanism(R)

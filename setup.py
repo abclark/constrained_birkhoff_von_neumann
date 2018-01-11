@@ -24,7 +24,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='generalized_birkhoff_von_neumann',  # Required
-    version='0.0.1.dev1',  # Required
+    version='0.0.2.dev1',  # Required
     description='A generalized Birkoff von Neumann decomposition',  # Required
     long_description=__doc__,  # Optional
     url='https://github.com/abclark/generalized_birkhoff_von_neumann',  # Optional

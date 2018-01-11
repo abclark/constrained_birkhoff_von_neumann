@@ -105,7 +105,7 @@ def graph_constructor(X,bihierarchy,constraint_structure):
 #and decomposes the graph into two graphs, each with an associated probability, 
 #and each of which are closer to representing a basis matrix. Seqential iteration, 
 #done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the decomposition.
-def generalized_birkhoff_von_neumann_iterator(H):
+def generalized_birkhoff_von_neumann_iterator(H, X):
   (G, p) = H.pop(0)
   #remove edges with integer weights
   #extracts all edges satisfy the weight threshold:
@@ -151,7 +151,7 @@ def iterator_of_generalized_birkhoff_von_neumann_iterator(X, G):
   solution=[]
   while len(H) > 0:
     if any(tolerance < x < 1-tolerance for x in [d['weight'] for (u,v,d) in H[0][0].edges(data=True) if u in [frozenset({x}) for x in S]]):
-      H.extend(generalized_birkhoff_von_neumann_iterator([H.pop(0)]))
+      H.extend(generalized_birkhoff_von_neumann_iterator([H.pop(0)], X))
     else:
       solution.append(H.pop(0))
   return(solution)

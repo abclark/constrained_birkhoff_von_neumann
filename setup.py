@@ -23,7 +23,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 # Fields marked as "Optional" may be commented out.
 
 setup(
-    name='generalized_birkoff_von_neumann',  # Required
+    name='generalized_birkhoff_von_neumann',  # Required
     version='0.0.1.dev1',  # Required
     description='A generalized Birkoff von Neumann decomposition',  # Required
     long_description=__doc__,  # Optional

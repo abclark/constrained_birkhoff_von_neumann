@@ -76,7 +76,7 @@ def bihierarchy_test(constraint_structure):
 
 #graph_constructor takes a target matrix X and a bihierarchy = [A,B],
 #constructs a directed weighted graph G
-def graph_constructor(X,bihierarchy):
+def graph_constructor(X,bihierarchy,constraint_structure):
   S = {index for index, x in np.ndenumerate(X)}
   A, B = bihierarchy
   A.append(S), B.append(S)
@@ -193,4 +193,4 @@ def solution_cleaner(X, solution):
 def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
   S = {index for index, x in np.ndenumerate(X)}
   feasibility_test(X,constraint_structure)
-  return(solution_cleaner(X, iterator_of_generalized_birkhoff_von_neumann_iterator(X, graph_constructor(X, bihierarchy_test(constraint_structure) ) ) ) ) 
+  return(solution_cleaner(X, iterator_of_generalized_birkhoff_von_neumann_iterator(X, graph_constructor(X, bihierarchy_test(constraint_structure), constraint_structure ) ) ) ) 

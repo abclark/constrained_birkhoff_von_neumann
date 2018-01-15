@@ -18,9 +18,9 @@ from generalized_birkhoff_von_neumann import generalized_birkhoff_von_neumann_de
 #
 #For example
 #
-# X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
-# 
-# constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,3)}
+X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
+
+constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,3)}
 #
 # The first, and only, entry of this constraint structure requires that the 
 # (0, 0), (0, 1), (0,2) entries of each basis matrix sum to 1, 2, or 3.
@@ -91,7 +91,7 @@ Download source code <code>probabilistic_serial_mechanism.py</code>
 #
 #For example:
 #
-# R = {0: [0,1,2], 1: [2,1,0]}
+R = {0: [0,1,2], 1: [2,1,0]}
 
 probabilistic_serial_mechanism(R)</code></pre>
         

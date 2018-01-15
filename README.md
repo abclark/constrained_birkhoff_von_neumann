@@ -7,7 +7,7 @@ The constraints must form what they call a bihierarchy.</p>
 
 <h2>Installation</h2>
         
-<pre><code>pip install generalized_birkhoff_von_neumann</code></pre>
+Download source code <code>generalized_birkhoff_von_neumann.py</code>
         
 <h2>Basic usage</h2>
         
@@ -83,7 +83,7 @@ array([[ 0.5,  0.2,  0.3],
         
 <h3>Installation</h3>
         
-<pre><code>pip install probabilistic_serial_mechanism</code></pre>
+Download source code <code>probabilistic_serial_mechanism.py</code>
         
 <h3>Basic usage</h3>
         

@@ -23,23 +23,34 @@ either version 3 of the License, or (at your option) any later version.
 
 import numpy as np
 
-def probabilistic_serial_mechanism(R):
-  m = np.ones(len(R[0]))
+TOLERANCE = 1.0e-5
+
+def probabilistic_serial_mechanism(R, m):
+  # define an empty dictionary to store the solution
   P={}
+  # give the empty dictionary P the structure of the solution
   for key, value in R.items():
-    P[key]=np.zeros(len(value))
-  while max(m) > 0:
+    P[key]= [0]*len(value)
+  # eat probability mass while it remains
+  while any(R[key] != [] for key,values in R.items()):
+    # if an object has no remaining probability mass, remove it from the rank order lists
     for key,value in R.items():
-      R[key] = [i for i in value if m[i] != 0]
+      R[key] = [i for i in value if m[i] > TOLERANCE and P[key][i] < 1-TOLERANCE]
+    # define a zero vector whose dimension equals the number of objects
     y = np.zeros(len(m))
+    x = np.ones(len(R.items()))
+    # count how many agents rank each object first (under updated rank order lists)
     for key,value in R.items():
-      y[value[0]] += 1
-    #time taken to deplete remaining masses
+      if value != []:
+        y[value[0]] += 1
+        x[key] = 1 - P[key][value[0]]
+    # define a vector with entries being the time taken until probability mass is depleted
     z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(m,y)]
-    #reduce and allocate masses
+    # for each agent, reduce remaining probability masses by smallest time taken to deplete a probability mass
     for key,value in R.items():
-      m[value[0]] -= min(z)
-      P[key][value[0]] += min(z)  
+      if value != []:
+        m[value[0]] -= min(min(z), min(x))
+        P[key][value[0]] += min(min(z), min(x))
+  # if all probaility masses are nil, the process is done—return the solution
   else:
-    return(P)
- 
+    return([P,np.array([value for key, value in P.items()])])

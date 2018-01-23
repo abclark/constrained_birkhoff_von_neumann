@@ -41,20 +41,20 @@ from pprint import pprint
 #global things
 tolerance = np.finfo(np.float).eps*10e10
 
-#feasibity_test tests whether all entries of the target matrix X are in [0,1]. 
+#feasibity_test tests whether all entries of the target matrix X are in [0,1].
 #Essential since each basis matrix has entries that are either zero or one.
 def feasibility_test(X, constraint_structure):
   S = {index for index, x in np.ndenumerate(X)}
   if any(X[i]<0 or X[i]>1 for i in S):
-    print("matrix entries must be between zero and one")
+    sys.exit("matrix entries must be between zero and one")
   for key, value in constraint_structure.items():
     if sum([X[i] for i in key]) < value[0] or sum([X[i] for i in key]) > value[1]:
-      print("matrix entries must respect constraint structure capacities")
+      sys.exit("matrix entries must respect constraint structure capacities")
  
 #bihierarchy_test attempts to decompose the constraint structure into a bihierarchy.
 #The user is informed if this is not possible.
 #Unfortunately, its success depends on the order of the constraint structure sets.
-#So, it must considers all permutations of these sets when the constraint structure is not a bihierarchy.
+#So, it must consider all permutations of these sets when the constraint structure is not a bihierarchy.
 def bihierarchy_test(constraint_structure):
   constraint_sets = []
   for key, value in constraint_structure.items():
@@ -72,7 +72,7 @@ def bihierarchy_test(constraint_structure):
       target.append(idx)
     if len(listofA) + len(listofB) == len(constraint_sets):
       return [[constraint_set_ordering[i] for i in listofA], [constraint_set_ordering[i] for i in listofB]]
-  print("this constraint structure is not a bihierarchy")
+  sys.exit("this constraint structure is not a bihierarchy")
 
 #graph_constructor takes a target matrix X and a bihierarchy = [A,B],
 #constructs a directed weighted graph G

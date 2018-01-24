@@ -15,16 +15,14 @@ The constraints must form what they call a bihierarchy.</p>
   <a href="#Application">Application</a></p>
 
         
-      </header>
-      <section>
 
-        <h2 id="Installation">Installation</h2>
+<h2 id="Installation">Installation</h2>
         
-        Download <code>constrained_birkhoff_von_neumann.py</code>
+Download <code>constrained_birkhoff_von_neumann.py</code>
         
-        <h2 id="Basic usage">Basic usage</h2>
+<h2 id="Basic usage">Basic usage</h2>
         
-        <pre><code>import numpy as np
+<pre><code>import numpy as np
 from constrained_birkhoff_von_neumann import constrained_birkhoff_von_neumann_decomposition
 
 # Create a matrix whose entries are between 0 and 1, and a constraint structure. 
@@ -41,9 +39,9 @@ from constrained_birkhoff_von_neumann import constrained_birkhoff_von_neumann_de
 constrained_birkhoff_von_neumann_decomposition(X, constraint_structure)
 </code></pre>
         
-        <h2 id="Mathematical background">Mathematical background</h2>
+<h2 id="Mathematical background">Mathematical background</h2>
        
-        <p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
+<p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
 
 <h2 id="API">API</h2>
         
@@ -96,11 +94,11 @@ array([[ 0.5,  0.2,  0.3],
         
 <h3>Installation</h3>
         
-        Download <code>probabilistic_serial_mechanism.py</code>
+Download <code>probabilistic_serial_mechanism.py</code>
         
 <h3>Basic usage</h3>
         
-        <pre><code># Create a dictionary R with agents as keys and rank order lists as values
+<pre><code># Create a dictionary R with agents as keys and rank order lists as values
 # Create a list m of the probability masses for each object
 #
 # For example:
@@ -110,9 +108,9 @@ R = {0: [0,1,2], 1: [2,1,0]}
 m = [1, 1, 1]
 probabilistic_serial_mechanism(R, m)</code></pre>
         
-        <h3>Mathematical background</h3>
+<h3>Mathematical background</h3>
        
-        <p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
+<p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.</p>
 
 <h3>API</h3>
         

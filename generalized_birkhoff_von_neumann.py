@@ -1,6 +1,6 @@
 """
 =======================================
-generalized_birkhoff_von_neumann.py 
+constrained_birkhoff_von_neumann.py 
 =======================================
 Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user imposed constraints. 
 
@@ -11,7 +11,7 @@ The constraints must form what they call a bihierarchy.
 
 Copyright 2017 Aubrey Clark.
 
-generalized_birkhoff_von_neumann is free software: you can redistribute it and/or modify it 
+constrained_birkhoff_von_neumann is free software: you can redistribute it and/or modify it 
 under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or (at your option) any later version.
 
@@ -99,13 +99,13 @@ def graph_constructor(X,bihierarchy,constraint_structure):
     G.add_edge(frozenset({index}), (frozenset({index}),'p'), weight=x, min_capacity = 0, max_capacity = 1)
   return(G)
 
-#generalized_birkhoff_von_neumann_iterator is the main step.
+#constrained_birkhoff_von_neumann_iterator is the main step.
 #After target matrix X and constraint structure have been represented as a weighted directed graph G, 
 #this function takes as input a list H = [(G,p)] (where p is a probability, initially one) 
 #and decomposes the graph into two graphs, each with an associated probability, 
 #and each of which are closer to representing a basis matrix. Seqential iteration, 
 #done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the decomposition.
-def generalized_birkhoff_von_neumann_iterator(H, X):
+def constrained_birkhoff_von_neumann_iterator(H, X):
   (G, p) = H.pop(0)
   #remove edges with integer weights
   #extracts all edges satisfy the weight threshold:
@@ -142,16 +142,16 @@ def generalized_birkhoff_von_neumann_iterator(H, X):
   gamma = min([1,max([0,push_reverse_pull_forward/(push_forward_pull_reverse + push_reverse_pull_forward)])])
   return([(G1,p*gamma), (G2,p*(1-gamma))])
 
-#iterator_of_generalized_birkhoff_von_neumann_iterator iterates generalized_birkhoff_von_neumann_iterator, 
+#iterate_generalized_birkhoff_von_neumann_iterator iterates generalized_birkhoff_von_neumann_iterator, 
 #initially on the weighted directed graph (and probability) [(G,1)] where G is given by graph_constructor, 
 #and then on its children, until the terminal nodes of the tree, which each represents a basis matrix (modulo tolerance)
-def iterator_of_generalized_birkhoff_von_neumann_iterator(X, G):
+def iterate_constrained_birkhoff_von_neumann_iterator(X, G):
   S = {index for index, x in np.ndenumerate(X)}
   H=[(G,1)]
   solution=[]
   while len(H) > 0:
     if any(tolerance < x < 1-tolerance for x in [d['weight'] for (u,v,d) in H[0][0].edges(data=True) if u in [frozenset({x}) for x in S]]):
-      H.extend(generalized_birkhoff_von_neumann_iterator([H.pop(0)], X))
+      H.extend(constrained_birkhoff_von_neumann_iterator([H.pop(0)], X))
     else:
       solution.append(H.pop(0))
   return(solution)
@@ -189,8 +189,8 @@ def solution_cleaner(X, solution):
     coefficients.append(a[1])
   return([coefficients, assignments, sum(coefficients), sum(i[1]*i[0] for i in zip(coefficients, assignments))])
 
-#generalized_birkhoff_von_neumann_decomposition puts the pieces together
-def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
+#constrained_birkhoff_von_neumann_decomposition puts the pieces together
+def constrained_birkhoff_von_neumann_decomposition(X,constraint_structure):
   S = {index for index, x in np.ndenumerate(X)}
   feasibility_test(X,constraint_structure)
-  return(solution_cleaner(X, iterator_of_generalized_birkhoff_von_neumann_iterator(X, graph_constructor(X, bihierarchy_test(constraint_structure), constraint_structure ) ) ) ) 
+  return(solution_cleaner(X, iterate_constrained_birkhoff_von_neumann_iterator(X, graph_constructor(X, bihierarchy_test(constraint_structure), constraint_structure ) ) ) ) 

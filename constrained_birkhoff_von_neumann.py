@@ -3,13 +3,16 @@
 constrained_birkhoff_von_neumann.py 
 =======================================
 Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user imposed constraints. 
-When the starting matrix is doubly stochastic and the basis matrices are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
+When the starting matrix is doubly stochastic and the basis elements are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
 Here we implement the algorithm identified in Budish, Che, Kojima, and Milgrom (2013). 
 The constraints must form what they call a bihierarchy.
+
 Copyright 2017 Aubrey Clark.
+
 constrained_birkhoff_von_neumann is free software: you can redistribute it and/or modify it 
 under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or (at your option) any later version.
+
 Below are two example target matrices X and two corresponding constraint structures. X is the matrix we wish to decompose 
 into a weighted sum of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the 
 basis matrices (the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the 
@@ -97,7 +100,7 @@ def graph_constructor(X,bihierarchy,constraint_structure):
 #this function takes as input a list H = [(G,p)] (where p is a probability, initially one) 
 #and decomposes the graph into two graphs, each with an associated probability, 
 #and each of which are closer to representing a basis matrix. Seqential iteration, 
-#done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the decomposition.
+#done in the main function constrained_birkhoff_von_neumann_decomposition, leads to the decomposition.
 def constrained_birkhoff_von_neumann_iterator(H, X):
   (G, p) = H.pop(0)
   #remove edges with integer weights
@@ -135,7 +138,7 @@ def constrained_birkhoff_von_neumann_iterator(H, X):
   gamma = min([1,max([0,push_reverse_pull_forward/(push_forward_pull_reverse + push_reverse_pull_forward)])])
   return([(G1,p*gamma), (G2,p*(1-gamma))])
 
-#iterate_generalized_birkhoff_von_neumann_iterator iterates generalized_birkhoff_von_neumann_iterator, 
+#iterate_constrained_birkhoff_von_neumann_iterator iterates constrained_birkhoff_von_neumann_iterator, 
 #initially on the weighted directed graph (and probability) [(G,1)] where G is given by graph_constructor, 
 #and then on its children, until the terminal nodes of the tree, which each represents a basis matrix (modulo tolerance)
 def iterate_constrained_birkhoff_von_neumann_iterator(X, G):

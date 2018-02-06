@@ -100,7 +100,8 @@ Download <code>probabilistic_serial_mechanism.py</code>
         
 <pre><code># Create a dictionary R with agents as keys and rank order lists as values
 # Create a list m of the probability masses for each object
-#
+# The mass is greater than one when there are multiple units of an object and each
+# agent can be allocated at most one of the units.
 # For example:
 #
 

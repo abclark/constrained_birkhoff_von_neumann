@@ -28,9 +28,10 @@ import copy
 TOLERANCE = 1.0e-5
 
 def probabilistic_serial_mechanism(R, m):
-  # define an empty dictionary to store the solution
+  # define an empty dictionary to store the solution, and copies of R and m
   P={}
   Q = copy.deepcopy(R)
+  t = copy.deepcopy(m)
   # give the empty dictionary P the structure of the solution
   for key, value in Q.items():
     P[key]= [0]*len(value)
@@ -38,9 +39,9 @@ def probabilistic_serial_mechanism(R, m):
   while any(Q[key] != [] for key,values in Q.items()):
     # if an object has no remaining probability mass, remove it from the rank order lists
     for key,value in Q.items():
-      Q[key] = [i for i in value if m[i] > TOLERANCE and P[key][i] < 1-TOLERANCE]
+      Q[key] = [i for i in value if q[i] > TOLERANCE and P[key][i] < 1-TOLERANCE]
     # define a zero vector whose dimension equals the number of objects
-    y = np.zeros(len(m))
+    y = np.zeros(len(q))
     x = np.ones(len(Q.items()))
     # count how many agents rank each object first (under updated rank order lists)
     for key,value in Q.items():
@@ -48,11 +49,11 @@ def probabilistic_serial_mechanism(R, m):
         y[value[0]] += 1
         x[key] = 1 - P[key][value[0]]
     # define a vector with entries being the time taken until probability mass is depleted
-    z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(m,y)]
+    z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(q,y)]
     # for each agent, reduce remaining probability masses by smallest time taken to deplete a probability mass
     for key,value in Q.items():
       if value != []:
-        m[value[0]] -= min(min(z), min(x))
+        q[value[0]] -= min(min(z), min(x))
         P[key][value[0]] += min(min(z), min(x))
   # if all probaility masses are nil, the process is done—return the solution
   else:

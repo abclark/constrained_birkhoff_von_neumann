@@ -31,7 +31,7 @@ def probabilistic_serial_mechanism(R, m):
   # define an empty dictionary to store the solution, and copies of R and m
   P={}
   Q = copy.deepcopy(R)
-  t = copy.deepcopy(m)
+  q = copy.deepcopy(m)
   # give the empty dictionary P the structure of the solution
   for key, value in Q.items():
     P[key]= [0]*len(value)

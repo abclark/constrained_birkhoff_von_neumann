@@ -153,7 +153,13 @@ def iterate_constrained_birkhoff_von_neumann_iterator(X, G):
       solution.append(H.pop(0))
   return(solution)
 
-#solution_cleaner takes the solution, which comes in the form of a collection of weighted and directed graphs and probabilities. The central column of each graph corresponds to a basis matrix and the probability attached to the graph corresponds to the probability assigned to that basis matrix. solution_cleaner rounds the entries of the basis matrices according to tolerance so that each entry is either zero or one, merges duplicate basis matrices, and then converts the solution to a list whose first entry is the distribution over basis matrices, whose second entry is the list of basis matrices, and whose third and fourth entry are checks that the coefficients sum to one and that the average of the basis matrices is indeed the target matrix X 
+# solution_cleaner takes the solution, which comes in the form of a collection of weighted and directed graphs and 
+# probabilities. The central column of each graph corresponds to a basis matrix and the probability attached to the graph 
+# corresponds to the probability assigned to that basis matrix. solution_cleaner rounds the entries of the basis matrices 
+# according to tolerance so that each entry is either zero or one, merges duplicate basis matrices, and then converts the 
+# solution to a list whose first entry is the distribution over basis matrices, whose second entry is the list of basis 
+# matrices, and whose third and fourth entry are checks that the coefficients sum to one and that the average of the basis 
+# matrices is indeed the target matrix X 
 def solution_cleaner(X, solution):
   S = {index for index, x in np.ndenumerate(X)}
   solution_columns_and_probs = []

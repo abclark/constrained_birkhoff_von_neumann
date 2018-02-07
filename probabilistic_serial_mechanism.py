@@ -31,7 +31,7 @@ def probabilistic_serial_mechanism(R, m):
   # define an empty dictionary to store the solution, and copies of R and m
   P={}
   Q = copy.deepcopy(R)
-  q = copy.deepcopy(m)
+  t = copy.deepcopy(m)
   # give the empty dictionary P the structure of the solution
   for key, value in Q.items():
     P[key]= [0]*len(value)
@@ -39,21 +39,24 @@ def probabilistic_serial_mechanism(R, m):
   while any(Q[key] != [] for key,values in Q.items()):
     # if an object has no remaining probability mass, remove it from the rank order lists
     for key,value in Q.items():
-      Q[key] = [i for i in value if q[i] > TOLERANCE and P[key][i] < 1-TOLERANCE]
+      Q[key] = [i for i in value if t[i] > TOLERANCE and P[key][i] < 1-TOLERANCE]
     # define a zero vector whose dimension equals the number of objects
-    y = np.zeros(len(q))
+    y = np.zeros(len(t))
+    # define a vector of ones, one for each agent
     x = np.ones(len(Q.items()))
     # count how many agents rank each object first (under updated rank order lists)
+    # for each agent's preferred object (under updated rank order lists), 
+    # record in x how much more of that object's probability mass they can consume
     for key,value in Q.items():
       if value != []:
         y[value[0]] += 1
         x[key] = 1 - P[key][value[0]]
-    # define a vector with entries being the time taken until probability mass is depleted
-    z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(q,y)]
-    # for each agent, reduce remaining probability masses by smallest time taken to deplete a probability mass
+    # define a vector recording time taken until each object's probability mass is depleted without intervention
+    z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(t,y)]
+    # update probability masses m and record probability consumed in P
     for key,value in Q.items():
       if value != []:
-        q[value[0]] -= min(min(z), min(x))
+        t[value[0]] -= min(min(z), min(x))
         P[key][value[0]] += min(min(z), min(x))
   # if all probaility masses are nil, the process is done—return the solution
   else:

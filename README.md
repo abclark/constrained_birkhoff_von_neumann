@@ -82,7 +82,7 @@ array([[ 0.5,  0.2,  0.3],
        [ 0.2,  0.3,  0.5]])]
 >>> </code></pre>
 
-<p>The output of <code>constrained_birkhoff_von_neumann_decomposition(X,constraint_structure)</code> is a list. Its first entry is the distribution over basis matrices, second the list of basis matrices, third and fourth entries are checks that the entries of the distribution sum to one and that the average of the basis matrices is indeed the target matrix <code>X</codee></p>
+<p>The output of <code>constrained_birkhoff_von_neumann_decomposition(X,constraint_structure)</code> is a list. Its first entry is the distribution over basis matrices, second the list of basis matrices, third and fourth entries are checks that the entries of the distribution sum to one and that the average of the basis matrices is indeed the target matrix <code>X</code>.</p>
 
 <h2 id="Application">Application: probabilistic serial mechanism with constraints</h2>        
         

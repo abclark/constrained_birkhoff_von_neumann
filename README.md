@@ -82,6 +82,8 @@ array([[ 0.5,  0.2,  0.3],
        [ 0.2,  0.3,  0.5]])]
 >>> </code></pre>
 
+<p>The output of <code>constrained_birkhoff_von_neumann_decomposition(X,constraint_structure)</code> is a list whose first entry is the distribution over basis matrices, whose second entry is the list of basis matrices, and whose third and fourth entry are checks that the coefficients sum to one and that the average of the basis matrices is indeed the target matrix X</p>
+
 <h2 id="Application">Application: probabilistic serial mechanism with constraints</h2>        
         
 <p>There are <code>n</code> objects to be allocated among <code>m</code> agents. Each agent has a ranking of the objects. The probability of agent <code>i</code> winning object <code>j</code> is derived from the following process: agents simultaneously and at the same speed 'eat' the probability mass of their top ranked object for which probability mass still remains. The resulting probabilities can be collected in an <code>m</code> times <code>n</code> matrix <code>X</code> whose entry in its <code>i</code>'th row and <code>j</code>'th column is the probability that agent <code>i</code> wins object <code>j</code>.</p>

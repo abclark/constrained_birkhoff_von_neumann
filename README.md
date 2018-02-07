@@ -100,13 +100,15 @@ Download <code>probabilistic_serial_mechanism.py</code>
         
 <pre><code># Create a dictionary R with agents as keys and rank order lists as values
 # Create a list m of the probability masses for each object
-# The mass is greater than one when there are multiple units of an object and each
-# agent can be allocated at most one of the units.
+#
+# A mass greater than one is used when there are multiple units of an object that each
+# agent can be allocated at most one of.
+#
 # For example:
 #
 
 R = {0: [0,1,2], 1: [2,1,0]}
-m = [1, 1, 1]
+m = [1, 1, 2]
 probabilistic_serial_mechanism(R, m)</code></pre>
         
 <h3>Mathematical background</h3>
@@ -117,8 +119,8 @@ probabilistic_serial_mechanism(R, m)</code></pre>
         
  <pre><code>>>> from probabilistic_serial_mechanism import probabilistic_serial_mechanism
 >>> R = {0: [0,1,2], 1: [2,1,0]}
->>> m = [1,1,1]
+>>> m = [1,1,2]
 >>> probabilistic_serial_mechanism(R, m)
-[{0: [1.0, 0.5, 0], 1: [0, 0.5, 1.0]}, array([[ 1. ,  0.5,  0. ],
+[{0: [1.0, 0.5, 1.0], 1: [0, 0.5, 1.0]}, array([[ 1. ,  0.5,  1. ],
        [ 0. ,  0.5,  1. ]])]
 >>> </code></pre>

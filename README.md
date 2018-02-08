@@ -100,7 +100,9 @@ Download <code>probabilistic_serial_mechanism.py</code>
         
 <h3>Basic usage</h3>
         
-<pre><code># Create a dictionary R with agents as keys and rank order lists as values
+<pre><code>from probabilistic_serial_mechanism import probabilistic_serial_mechanism
+
+# Create a dictionary R with agents as keys and rank order lists as values
 # Create a list m of the probability masses for each object
 #
 # A mass greater than one is used when there are multiple units of an object that each

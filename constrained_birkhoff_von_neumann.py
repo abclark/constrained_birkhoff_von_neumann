@@ -6,6 +6,7 @@ Decomposes a matrix into a weighted sum of basis matrices with binary entries sa
 When the starting matrix is doubly stochastic and the basis elements are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
 Here we implement the algorithm identified in Budish, Che, Kojima, and Milgrom (2013). 
 The constraints must form what they call a bihierarchy.
+The user will be informed if the proposed constraint structure is not a bihierarchy.
 
 Copyright 2017 Aubrey Clark.
 
@@ -18,8 +19,10 @@ into a weighted sum of basis matrices. constraint_structure is a dictionary whos
 basis matrices (the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the 
 (0,0),(0,1),(0,2) coordinates), and whose keys refer to the minimum and maximum alowed sum of these entries in each of the basis matrices 
 (e.g. the value (1,1) means that the coordinates that this value's key represents sum to exactly one in each of the basis matrices.)
+
 X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
 constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,1), frozenset({(1, 0), (1, 1), (1,2)}):(1,1), frozenset({(2, 0), (2, 1), (2,2)}):(1,1), frozenset({(3, 0), (3, 1), (3,2)}):(1,1), frozenset({(0, 0), (1, 0), (2,0), (3,0)}):(1,2),  frozenset({(0, 1), (1, 1), (2,1), (3,1)}):(1,1), frozenset({(0, 2), (1, 2), (2,2), (3,2)}):(1,1), frozenset({(0, 0), (1, 0)}):(1,1)}
+
 X = np.array([[.3, .7], [.7,.3]])
 constraint_structure = {frozenset({(0, 1),(1,0)}): (1,2), frozenset({(1, 0),(1,1)}): (1,1)}
 """

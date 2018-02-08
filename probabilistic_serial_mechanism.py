@@ -60,4 +60,4 @@ def probabilistic_serial_mechanism(R, m):
         P[key][value[0]] += min(min(z), min(x))
   # if all probaility masses are nil, the process is done—return the solution
   else:
-    return([P,np.array([value for key, value in P.items()])])
+    print([P,np.array([value for key, value in P.items()])])

@@ -1,7 +1,7 @@
 """
-=======================================
+========================================
 constrained_birkhoff_von_neumann.py 
-=======================================
+========================================
 Decomposes a matrix into a weighted sum of basis matrices with binary entries satisfying user imposed constraints. 
 When the starting matrix is doubly stochastic and the basis elements are required to be permutation matrices, this is the classical Birkhoff von-Neumann decomposition.
 Here we implement the algorithm identified in Budish, Che, Kojima, and Milgrom (2013). 

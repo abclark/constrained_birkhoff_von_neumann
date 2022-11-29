@@ -1,0 +1,1916 @@
+<!doctype html>
+<html>
+  <head>
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_SVG">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>notes</title>
+
+    <link rel="stylesheet" href="../stylesheets/styles.css">
+    <link rel="stylesheet" href="../stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">  
+      <section>
+        <h1>Notes</h1>
+        
+ <p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;2&nbsp;4&nbsp;r&nbsp;d&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>I've reworked the code to deal with an fixed tree structure. The current problem is an error on line 15 when running <code>next_generation</code></p>     
+      
+<pre><code>def disjoint_set(T, K, starting_node):
+  labels = nx.get_node_attributes(T, 'label')
+  U = labels[starting_node]
+  if U =='LAMBDA':
+    return(U)
+  elif not bool(U&K):
+    return(U)
+  else:  
+    children = list(T.neighbors(starting_node))
+    while children != []:
+      try:
+        child = children.pop()
+        if T[starting_node][child]['weight'] in K & U:
+          starting_node = child
+          return disjoint_set(T, K, starting_node)
+      except KeyError:
+        pass
+
+# construct dictionary populated by the new generation's trees
+def initial_tree_dictionary(G):
+  D = {}
+  for x in itertools.product(*[G.nodes(),G.nodes]):
+    D.update({x:nx.DiGraph()})
+  return(D)
+
+# create the initial dictionary of trees
+def initial_tree_maker(G):
+  # get basic structure of initial trees
+  D = {}
+  for x in itertools.product(*[G.nodes(),G.nodes]):
+    D.update({x:nx.DiGraph()})
+    if x in G.edges():
+      D[x].add_node(1, label = {})
+    else:
+      D[x].add_node(1, label = 'LAMBDA')
+  return(D)
+
+def root_leaf_edge_set(tree, starting_node, leaf):
+  H = set()
+  while leaf != starting_node:
+    e = tree[[*tree.predecessors(leaf)].pop()][leaf]['weight']
+    H.update({e})
+    leaf = [*tree.predecessors(leaf)].pop()
+  return H
+
+def find_root(tree):
+  return([n for n,d in tree.in_degree() if d==0].pop())
+
+# builds a layer of the next generation trees
+def next_generation(G, P, K, q):
+  # G is the graph
+  # P is the previous generation of trees
+  # K is the current generation of trees
+  # u and v are nodes, we want to build the u, v tree for this generation
+  R = copy.deepcopy(K)
+  for (u,v) in set(itertools.product(*[G.nodes(),G.nodes])):
+    N = [x for x in G.neighbors(u) if x != v]
+    # if N is the empty list, move to next index (u,v)
+    if N != []:
+      w = N.pop()
+      L = [x for x in R[(u,v)].nodes() if R[(u,v)].out_degree(x) == 0]
+      # if L is the empty list, don't compute edge set and label root
+      if len(L) == 0:
+        U = disjoint_set(P[(w,v)], {w}, 1)
+        # if U is 'LAMBDA' there is no path from w to v
+        if U == 'LAMBDA':
+           R[(u,v)].add_nodes_from([(1 ,{'label': 'LAMBDA'})])
+        else:
+           V = U.update({w})
+           R[(u,v)].add_nodes_from([(1,{'label': V})])
+      else:
+        # if L is not the empty list, compute path from root to leaf
+        for i,leaf in enumerate(L):
+        # if leaf is LAMBDA we can move to the next leaf
+          if labels[leaf] != 'LAMBDA':
+            path = root_leaf_edge_set(R[(u,v)], 1, leaf)
+            # if depth is q we can move to next leaf
+            if len(path) < q:
+              for z in labels[leaf]:
+                U = disjoint_set(P[(w,v)], path, 1)
+                if U == 'LAMBDA':
+                  j = i + 1
+                  R[(u,v)].add_nodes_from([('leaf' + 'j', {'label': 'LAMBDA'})])
+                  R[(u,v)].add_edges_from([(leaf, 'leaf' + 'j', {'label': z})])
+                else:
+                  V = U.update({w})
+                  R[(u,v)].add_nodes_from([('leaf' + 'j', {'label': V})])
+                  R[(u,v)].add_edges_from([(leaf, 'leaf' + 'j', {'label': z})])
+  return(R)
+
+def full_next_generation(G, P, q):
+  R = initial_tree_dictionary(G)
+  K = next_generation(G, P, R, q)
+  while K != R:
+    R = K
+    K = next_generation(G, P, R, q)
+  return(K)</code></pre>
+        
+        
+<p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;2&nbsp;3&nbsp;r&nbsp;d&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>Need to rework <code>next_generation</code>. It may be able to be simplified and it needs to separate the starting case, where the tree is empty, from the following steps, where the tree is not.</p>     
+      
+<pre><code>def root_leaf_edge_set(tree, root, leaf):
+  H = set()
+  H.update({root, leaf})
+  while leaf != root:
+    e = tree[[*tree.predecessors(leaf)].pop()][leaf]['weight']
+    H.update({e})
+    leaf = [*tree.predecessors(leaf)].pop()
+  return H
+
+def disjoint_set(T, K, U):
+  if U =='LAMBDA':
+    return(U)
+  elif not bool(U&K):
+    return(U)
+  else:
+    children = list(T.neighbors(U))
+    while children != []:
+      try:
+        child = children.pop()
+        if T[U][child]['label'] in K & U:
+          U = child
+          return disjoint_set(T, K, U)
+      except KeyError:
+        pass
+
+# create the initial dictionary of trees
+def initial_tree_maker(G):
+  # get basic structure of initial trees
+  D = {}
+  for x in itertools.product(*[G.nodes(),G.nodes]):
+    D.update({x:nx.DiGraph()})
+    if x in G.edges():
+      D[x].add_nodes_from([frozenset()])
+    else:
+      D[x].add_nodes_from(['LAMBDA'])
+  return(D)
+
+def next_generation(G, P):
+  for (u,v) in G.edges():
+    B = P[(u,v)]
+    L = [x for x in B.nodes() if B.out_degree(x) == 0]
+    for leaf in L:
+      if [y for y in leaf] = []:
+      for z in leaf:
+        path = root_leaf_edge_set(B, find_root(B), leaf).update({z})
+        N = [x for x in G.neighbors(u) if x != v]
+        if N == []:
+          B.add_edge_from([leaf,'LAMBDA',{'label': z}])
+        else:
+          w = N.pop()
+          U = disjoint_set(P[(w,v)], path.update({w}), find_root(P[(w,v)]))
+          B.add_edges_from([(leaf, U.update({w}), {'label': z})])
+    return(P)
+
+def next_generation(G, P, K, q):
+  # G is the graph
+  # P is the previous generation of trees
+  # R is the current generation of trees
+  # u and v are nodes, we want to build the u, v tree for this generation
+  R = copy.deepcopy(K)
+  for (u,v) in set(itertools.product(*[G.nodes(),G.nodes])):
+    L = [x for x in R[(u,v)].nodes() if R[(u,v)].out_degree(x) == 0]
+    N = [x for x in G.neighbors(u) if x != v]
+    if len(L) == 0:
+      if len(N) == 0:
+        R[(u,v)].add_nodes_from(['LAMBDA'])
+      else:
+        w = N.pop()
+        R[(u,v)].add_nodes_from([frozenset({w})])
+    else:
+      for leaf in L:
+        short_path = root_leaf_edge_set(R[(u,v)], find_root(R[(u,v)]), leaf)
+        if leaf != 'LAMBDA':
+         if len(short_path) < q:
+            for z in leaf:
+              path = short_path.update({z})
+              if N == []:
+                R[(u,v)].add_edges_from([(leaf, 'LAMBDA', {'label': z})])
+              else:
+                w = N.pop()
+                U = disjoint_set(P[(w,v)], path.update({w}), find_root(P[(w,v)]))
+                if U == 'LAMBDA':
+                  R[(u,v)].add_edges_from([(leaf, 'LAMBDA', {'label': z})])
+                else:
+                  R[(u,v)].add_edges_from([(leaf, U.update({w}), {'label': z})])
+  return(R)
+
+def full_next_generation(G, P, q):
+  R = initial_tree_dictionary(G)
+  K = next_generation(G, P, R, q)
+  while K != R:
+    R = K
+    K = next_generation(G, P, R, q)
+  return(K)
+
+
+def initial_tree_dictionary(G):
+  # get basic structure of initial trees
+  D = {}
+  for x in itertools.product(*[G.nodes(),G.nodes]):
+    D.update({x:nx.DiGraph()})
+  return(D)
+
+
+def root_leaf_edge_set(tree, root, leaf):
+  H = set()
+  H.update({root, leaf})
+  while leaf != root:
+    e = tree[[*tree.predecessors(leaf)].pop()][leaf]['label']
+    H.update({e})
+    leaf = [*tree.predecessors(leaf)].pop()
+  return H        </pre></code>
+        
+<p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;1&nbsp;6&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>Current state of affairs:</p>     
+      
+<pre><code>def root_leaf_edge_set(tree, root, leaf):
+  H = set()
+  H.update({root, leaf})
+  while leaf != root:
+    e = tree[[*tree.predecessors(leaf)].pop()][leaf]['weight']
+    H.update({e})
+    leaf = [*tree.predecessors(leaf)].pop()
+  return H
+
+def disjoint_set(T, K, U):
+  if U =='LAMBDA':
+    return(U)
+  elif not bool(U&K):
+    return(U)
+  else:
+    children = list(T.neighbors(U))
+    while children != []:
+      try:
+        child = children.pop()
+        if T[U][child]['label'] in K & U:
+          U = child
+          return disjoint_set(T, K, U)
+      except KeyError:
+        pass
+
+# create the initial dictionary of trees
+def initial_tree_maker(G):
+  # get basic structure of initial trees
+  D = {}
+  for x in itertools.product(*[G.nodes(),G.nodes]):
+    D.update({x:nx.DiGraph()})
+    if x in G.edges():
+      D[x].add_nodes_from([frozenset()])
+    else:
+      D[x].add_nodes_from(['LAMBDA'])
+  return(D)
+
+def next_generation(G, P):
+  for (u,v) in G.edges():
+    B = P[(u,v)]
+    L = [x for x in B.nodes() if B.out_degree(x) == 0]
+    for leaf in L:
+      for z in leaf:
+        path = root_leaf_edge_set(B, find_root(B), leaf).update({z})
+        N = [x for x in G.neighbors(u) if x != v]
+        if N == []:
+          B.add_edge_from([leaf,'LAMBDA',{'label': z}])
+        else:
+          w = N.pop()
+          U = disjoint_set(P[(w,v)], path.update({w}), find_root(P[(w,v)]))
+          B.add_edges_from([(leaf, U, {'label': z})])
+    return(P)</pre></code>  
+   
+        
+        <p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;1&nbsp;5&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>Need to reconfigure existing functions to deal with intrinsic structure of tree. For example, <code>disjoint_set</code> now becomes</p>     
+      
+<pre><code># The following function implements Algorithm 1
+def disjoint_set(T, K, U):
+  V = T.nodes[U]['label']
+  if V =='LAMBDA':
+    return(V)
+  elif not bool(V&K):
+    return(V)
+  else:
+    children = list(T.neighbors(U))
+    while children != []:
+      try:
+        child = children.pop()
+        if T[U][child]['weight'] in K & V:
+          U = child
+          return disjoint_set(T, K, U)
+      except KeyError:
+        pass</pre></code>  
+        
+<p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;1&nbsp;4&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>Need intrinsic structure of tree nodes and to store information as labels</p>     
+      
+<pre><code>
+T = nx.DiGraph()
+T.add_edges_from([(0,1,{'weight': 1}), (0, 2, {'weight': 6}), (1,3, {'weight': 8}), (1, 4, {'weight': 3}), (2, 5, {'weight': 4}), (2, 6, {'weight': 7}), (3, 7, {'weight': 4}), (3, 8, {'weight': 2}), (4, 9, {'weight': 8}), (4, 10, {'weight': 4}), (5, 11, {'weight': 7}), (5,  12, {'weight': 1}), (6, 13, {'weight': 1}), (6, 14, {'weight': 5})])
+
+dict = {0:frozenset({1, 6}), 1: frozenset({8, 3}), 2: frozenset({4, 7}), 3: frozenset({2, 4}), 4: frozenset({8, 4}), 5: frozenset({1, 7}), 6: frozenset({1, 5}), 7: frozenset({3, 6}), 8: frozenset({4, 7}), 9: frozenset({2, 4}), 10: 'LAMBDA', 11: frozenset({1, 5}), 12: frozenset({8, 3}), 13: frozenset({2, 4}), 14: frozenset({8, 3})}
+
+nx.set_node_attributes(T, dict, 'label')
+</pre></code>         
+        
+<p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;1&nbsp;3&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+        <p>The function now returns properly. The solution was to put a <code>return</code> before invoking the recursion.</p>     
+      
+<pre><code>def disjoint_set(T, K, U):
+  if U =='LAMBDA':
+    return(U)
+  elif not bool(U&K):
+    return(U)
+  else:   
+    children = list(T.neighbors(U))
+    while children != []:
+      try:
+        child = children.pop()
+        if T[U][child]['label'] in K & U:
+          U = child
+          return disjoint_set(T, K, U)
+      except KeyError:
+        pass</pre></code>        
+        
+<p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;1&nbsp;2&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>The following function implements Algorithm 1. Need to get the function to return instead of print.</p>     
+      
+<pre><code>def disjoint_set(T, K, U):
+  if U =='LAMBDA':
+    print(U)
+  elif not bool(U&K):
+    print(U)
+  else:                    
+    children = list(T.neighbors(U))
+    while children != []:      
+      try:
+        child = children.pop()
+        if T[U][child]['label'] in K & U:
+          U = child
+          disjoint_set(T, K, U)
+      except KeyError:
+        pass</pre></code>
+        
+<p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;1&nbsp;1&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>Goal now is to modify the following breadth-first-search so that it functions as <code>disjoint_set</code>, i.e. outputs the node label of a q-tree that is disjoint from a given set, or, if no such set exists, outputs this fact.</p>     
+      
+<pre><code>def generic_bfs_edges(G, source, neighbors=None):
+    """Iterate over edges in a breadth-first search.
+
+    The breadth-first search begins at `source` and enqueues the
+    neighbors of newly visited nodes specified by the `neighbors`
+    function.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    source : node
+        Starting node for the breadth-first search; this function
+        iterates over only those edges in the component reachable from
+        this node.
+
+    neighbors : function
+        A function that takes a newly visited node of the graph as input
+        and returns an *iterator* (not just a list) of nodes that are
+        neighbors of that node. If not specified, this is just the
+        ``G.neighbors`` method, but in general it can be any function
+        that returns an iterator over some or all of the neighbors of a
+        given node, in any order.
+
+    Yields
+    ------
+    edge
+        Edges in the breadth-first search starting from `source`.
+
+    Examples
+    --------
+    >>> G = nx.path_graph(3)
+    >>> print(list(nx.bfs_edges(G,0)))
+    [(0, 1), (1, 2)]
+
+    Notes
+    -----
+    This implementation is from `PADS`_, which was in the public domain
+    when it was first accessed in July, 2004.
+
+    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS/BFS.py
+
+    """
+    visited = {source}
+    queue = deque([(source, neighbors(source))])
+    while queue:
+        parent, children = queue[0]
+        try:
+            child = next(children)
+            if child not in visited:
+                yield parent, child
+                visited.add(child)
+                queue.append((child, neighbors(child)))
+        except StopIteration:
+            queue.popleft()
+
+
+[docs]def bfs_edges(G, source, reverse=False):
+    """Iterate over edges in a breadth-first-search starting at source.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    source : node
+       Specify starting node for breadth-first search and return edges in
+       the component reachable from source.
+
+    reverse : bool, optional
+       If True traverse a directed graph in the reverse direction
+
+    Returns
+    -------
+    edges: generator
+       A generator of edges in the breadth-first-search.
+
+    Examples
+    --------
+    To get the edges in a breadth-first search::
+
+        >>> G = nx.path_graph(3)
+        >>> list(nx.bfs_edges(G, 0))
+        [(0, 1), (1, 2)]
+
+    To get the nodes in a breadth-first search order::
+
+        >>> G = nx.path_graph(3)
+        >>> root = 2
+        >>> edges = nx.bfs_edges(G, root)
+        >>> nodes = [root] + [v for u, v in edges]
+        >>> nodes
+        [2, 1, 0]
+
+    Notes
+    -----
+    Based on http://www.ics.uci.edu/~eppstein/PADS/BFS.py
+    by D. Eppstein, July 2004.
+    """
+    if reverse and G.is_directed():
+        successors = G.predecessors
+    else:
+        successors = G.neighbors
+    # TODO In Python 3.3+, this should be `yield from ...`
+    for e in generic_bfs_edges(G, source, successors):
+        yield e</pre></code>
+        
+        
+        
+<p>
+<BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;&nbsp;8&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>Below is a more worked-out outline for the algorithm of <a href="./Monien85.pdf"><em>Monien 1985</em></a> for finding paths of length \(k\) in an undirected graph.</p>
+ 
+       <pre><code>"""
+=======================================
+cycle_finder.py
+=======================================
+Determines whether a graph G = (V,E) has a cycle of length k, and if it does, outputs one such cycle.
+Given graph G = (V, E)
+Key objects:
+        1) F(i,j,p): family of interior points of all paths from vertex i to j of length p
+        2) B(q,i,j,p):
+        —tree of height at most q
+        —nodes labeled by elements of F(i,j,p) or a special symbol lambda
+        —nodes have one successor for each element of their label
+        —this edge is labeled with this element
+        -nodes labeled with either an element of F(i,j,p) that is disjoint from the collection of edge labels leading to that node or, if no such element exists, lambda
+Algorithm 1: given B(q,i,j,p), and (up to?) q vertices T, compute U in F(i,j,p) disjoint from T in O(p.q)
+        —search in B(q,i,j,p) (whose collection of node labels q-representative of F(i,j,p), see Monien 1985)
+Algorithm 2: Given B(q,i,j,p) for all i,j, compute B(q-1,u,v,p+1) in O(q.(p+1)^q.degree(u))
+        —wish to label a node, let L denote edge labels leading to that node
+        —search for edge (u,w) with w not in L
+        —if none, label node lambda; otherwise,
+        —apply Algorithm 1 to B(q,w,v,p) with T = L U {u}, label with output
+Main algorithm:
+        —F(i,j,0) is {i,j} if in E or empty, B(k-1,i,j,0) is the singleton node labeled {i,j} or lambda
+        —Apply Algorithm 2 to get B(k-2,i,j,1) for all i,j
+        -Repeat, B(0,u,v,k-1) has singleton node labeled lambda if no path between u and v exists
+        —otherwise, a path between u and v does exist and the label is its internal vertices
+"""
+
+#: The current version of this package.
+__version__ = '0.0.1-dev'
+
+import networkx as nx
+import numpy as np
+import copy
+import itertools
+import math
+import sys
+from pprint import pprint
+
+#global things
+tolerance = np.finfo(np.float).eps*10e10
+
+# given node in tree, disjoint set compares node and its decendents with set until it finds a node
+# who is disjoint from set
+def disjoint_set(tree,set,node):
+  if bool(node & set) = False:
+    return(node)
+  elseif node & set = {lambda}:
+    return(lambda)
+  else:
+    for sonedge, son node in sons:
+      disjoint_set(tree, set, sonnode)
+
+# iterate through nodes of tree, finding a U that is disjoint from set
+# or concluding that no such set exists
+def disjoint_set_finder(tree, set)
+  for node in nodesoftree:
+    if disjoint_set(tree, set, node) != lambda:
+      return disjoint_set(tree, set, node)
+    else:
+      return lambda
+
+def tree_maker(tree_list_indexed_by_edges, set):
+  tree = {}
+  # start at level i node, having constructed the tree to level i-1
+  # collect in a set E the edge labels from root to node
+  # label node as disjoint_set(tree,E)
+</pre></code>
+        
+<p>
+  <BIG>
+F&nbsp;E&nbsp;B&nbsp;R&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;&nbsp;7&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>The next programming project is to implement an algorithm of <a href="./Monien85.pdf"><em>Monien 1985</em></a> for finding a simple cycle of length \(2k\) in an undirected graph. The following papers build upon this paper: <a href="./YusterZwick97.pdf"><em>Yuster and Zwick 1997</em></a>, <a href="./AlonYusterZwick97.pdf"><em>Alon, Yuster,  and Zwick 1997</em></a>, and <a href="https://arxiv.org/pdf/1703.10380.pdf"><em>Dahlgaard et. al 2017</em></a></p>
+        
+<p>
+  <BIG>
+J&nbsp;A&nbsp;N&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;2&nbsp;3&nbsp;r&nbsp;d&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+<p>I have updated the code for <code>probabilistic_serial_mechanism.py</code>, to allow for the assignment of multiple units, and of <code>generalized_birkhoff_von_neumann.py</code>, to print error messages more cleanly (although a problem now is that the <code>sys.exit()</code> command exits from python). The main difficulty was in updating <code>probabilistic_serial_mechanism.py</code> so that agent's stop after eating a unit mass of probability for a single item. The updated python code is as follows<br><br></p>.
+
+<pre><code>import numpy as np
+
+TOLERANCE = 1.0e-5
+
+def probabilistic_serial_mechanism(R, m):
+  # define an empty dictionary to store the solution
+  P={}
+  # give the empty dictionary P the structure of the solution
+  for key, value in R.items():
+    P[key]= [0]*len(value)
+  # eat probability mass while it remains
+  while any(R[key] != [] for key,values in R.items()):
+    # if an object has no remaining probability mass, remove it from the rank order lists
+    for key,value in R.items():
+      R[key] = [i for i in value if m[i] > TOLERANCE and P[key][i] < 1-TOLERANCE]
+    # define a zero vector whose dimension equals the number of objects
+    y = np.zeros(len(m))
+    x = np.ones(len(R.items()))
+    # count how many agents rank each object first (under updated rank order lists)
+    for key,value in R.items():
+      if value != []:
+        y[value[0]] += 1
+        x[key] = 1 - P[key][value[0]]
+    # define a vector with entries being the time taken until probability mass is depleted
+    z = [max(i,0.000001)/max(j,0.0000001) for i,j in zip(m,y)]
+    # for each agent, reduce remaining probability masses by smallest time taken to deplete a probability mass
+    for key,value in R.items():
+      if value != []:
+        m[value[0]] -= min(min(z), min(x))
+        P[key][value[0]] += min(min(z), min(x))
+  # if all probaility masses are nil, the process is done—return the solution
+  else:
+    return([P,np.array([value for key, value in P.items()])])</pre></code>
+        
+<p>        
+<BIG>
+J&nbsp;A&nbsp;N&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;&nbsp;3&nbsp;r&nbsp;d&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+This python code prompts input of a string and writes it to a .txt file.<br><br>
+
+<pre><code>todo = input("What do you have to do? ")
+
+f = open("todolist.txt", "r")
+old = f.read()
+f.close
+
+f = open("todolist.txt","w")
+f.write(todo + "\n" + old)
+f.close()</pre></code>
+
+This python code prompts input of a string and deletes it from a .txt file.<br><br>      
+      
+<pre><code>done = input("What have you done? ")
+
+f = open("todolist.txt","r")
+lines = f.readlines()
+f.close()
+
+f = open("todolist.txt","w")
+for line in lines:
+  if line!=done + "\n":
+    f.write(line)
+f.close()</pre></code>    
+      
+<p>          
+<BIG>
+J&nbsp;A&nbsp;N&nbsp;U&nbsp;A&nbsp;R&nbsp;Y&nbsp;&nbsp;&nbsp;1&nbsp;s&nbsp;t&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;8</BIG>
+</p>        
+        
+This python code prompts input of a string. The string is stored in a .txt file alongside the hash of the preceding line.<br><br>
+
+I want to check that the file is consistent, i.e. that the hash on each line is the hash of the preceding line. Make a function that does this.<br><br>
+
+<pre><code>import hashlib
+
+todo = input("What will you do today?")
+
+with open("todolist.txt", "r+") as f:
+  old = f.read()
+  l = f.readline()
+  linput = l.encode('utf-8')
+  lhash = hashlib.sha1()
+  lhash.update(linput)
+  lhash = lhash.hexdigest()
+  print(todo + "\t" + lhash)
+  f.seek(0)
+  f.write(todo + "\t" + lhash + "\n" + old)</pre></code>
+
+<p>
+<BIG>
+D&nbsp;E&nbsp;C&nbsp;E&nbsp;M&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;4&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>        
+
+
+<pre><code>try:
+  import Image
+  except ImportError:
+  from PIL import Image
+
+import pytesseract</code></pre> 
+
+<p><code>test_page1.png</code></p>
+        
+        <div class="container">
+<img src="test_page1.png" />
+</div> 
+        
+<pre><code>>>> print(pytesseract.image_to_string(Image.open('test_page1.png')))</code></pre>
+
+<pre><code>4.2 Transposition (Fixed Period d)
+
+The message is divided into groups of length d and a pennutation applied to
+the ﬁrst group, the same pennutation to the second group, etc. The pennuta—
+tion is the key and can be represented by a pennutation of the ﬁrst d integers.
+Thus for d = 5, we might have 2 3 1 5 4 as the pennutation. This means that:
+
+m1m2m3m4m5m6m7m8m9m10‘”
+
+becomes
+m2 m3 m1 m5 m4 m7 m8 m6 m10 m9 ---.
+
+Sequential application of two or more transpositions will be called com—
+pound transposition. If the periods are d1, d2, - - -, d” it is clear that the re—
+sult is a transposition of period d, where d is the least common multiple of
+
+d17d27 ' ' '7dn-
+
+43 Vigenére, and Variations
+
+In the Vigenere cipher the key consists of a series of d1etters.These are writ—
+
+ten repeatedly below the message and the two added modulo 26 (considering
+the alphabet numbered from A = 0 to Z = 25. Thus</code></pre> 
+     
+        <p><code>fulltestpage.png</code></p>
+        
+        <div class="container">
+<img src="fulltestpage.png" />
+</div>         
+        
+<pre><code>>>> print(pytesseract.image_to_string(Image.open('fulltestpage.png')))</code></pre>
+        
+        
+<pre><code>, NcoM/aé M/7% Mag
+Mapiéng/ ..~y./¢.,y/2ﬁ,,,.., %"A%
+M AW ZMA/ ﬂuMa W
+
+- ,W/b/H ,e, , //4 1;; A4“;
+7“” Z
+
+W /;n mg , “44/4,? ‘ 4%;
+Mad M gag? 4/14.: M
+
+#17 hvm‘ Z— // Aﬁé— W #MW
+>>> </code></pre>
+
+       
+        
+        
+<p>
+<BIG>
+D&nbsp;E&nbsp;C&nbsp;E&nbsp;M&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;9&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>        
+
+<pre><code>
+R = {0: [0,1,2], 1: [2,1,0], 3: [2,0,1]}
+
+import numpy as np
+
+m = np.ones(len(R[0]))
+P={}
+for key, value in R.items():
+  P[key]=np.zeros(len(value))
+
+while max(m) > 0:
+  for key,value in R.items():
+    R[key] = [i for i in value if m[i] != 0]
+  y = np.zeros(len(m))
+  for key,value in R.items():
+    y[value[0]] += 1
+  #time taken to deplete remaining mass
+  z = [max(i,0.001)/max(j,0.0001) for i,j in zip(m,y)]
+  #reduce masses 
+  for key,value in R.items():
+    m[value[0]] -= min(z)
+    P[key][value[0]] += min(z)  
+else:
+  print(P)</code></pre>
+        
+ <p>
+<BIG>
+D&nbsp;E&nbsp;C&nbsp;E&nbsp;M&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;8&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>         
+        
+        <p><em>View the <a href="https://github.com/abclark/generalized_birkhoff_von_neumann">source of this content</a>.</em></p>
+
+        <p>Decomposes a matrix into a weighted average of basis matrices with binary entries 
+satisfying user imposed constraints. 
+When the starting matrix is doubly stochastic and the basis matrices are required to
+be permutation matrices, this is the classical Birkhoff von-Neumann decomposition. 
+Here we implement the algorithm identified in <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>. 
+The constraints must form what they call a bihierarchy.</p>
+
+        <h3>Installation</h3>
+        
+        <pre><code>pip install generalized_birkhoff_von_neumann</code></pre>
+        
+        <h3>Basic usage</h3>
+        
+        <pre><code>import numpy as np
+from generalized_birkhoff_von_neumann import generalized_birkhoff_von_neumann_decomposition
+
+# Create a matrix whose entries are between 0 and 1, and a constraint structure. 
+#
+#For example
+#
+# X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
+# 
+# constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,3)}
+#
+# The first, and only, entry of the constraint structure requires that the sum of the 
+# (0, 0), (0, 1), (0,2) entries of the basis matrices are 1, 2, or 3
+
+generalized_birkhoff_von_neumann_decomposition(X, constraint_structure)
+</code></pre>
+        
+        <h3>Mathematical background</h3>
+       
+        <p>See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a></p>
+
+<h3>API</h3>
+        
+ <pre><code>>>> import numpy as np
+>>> from generalized_birkhoff_von_neumann import generalized_birkhoff_von_neumann_decomposition
+>>> X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
+>>> constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,1), frozenset({(1, 0), (1, 1), (1,2)}):(1,1), frozenset({(2, 0), (2, 1), (2,2)}):(1,1), frozenset({(3, 0), (3, 1), (3,2)}):(1,1), frozenset({(0, 0), (1, 0), (2,0), (3,0)}):(1,2), frozenset({(0, 1), (1, 1), (2,1), (3,1)}):(1,1), frozenset({(0, 2), (1, 2), (2,2), (3,2)}):(1,1), frozenset({(0, 0), (1, 0)}):(1,1)}
+>>> generalized_birkhoff_von_neumann_decomposition(X,constraint_structure)
+[[0.14285714285714288, 
+0.3571428571428571, 
+0.29999999999999999, 
+0.057142857142857141, 
+0.14285714285714282], 
+[array([[ 0.,  1.,  0.],
+       [ 1.,  0.,  0.],
+       [ 1.,  0.,  0.],
+       [ 0.,  0.,  1.]]), 
+array([[ 1.,  0.,  0.],
+       [ 0.,  1.,  0.],
+       [ 1.,  0.,  0.],
+       [ 0.,  0.,  1.]]), 
+array([[ 0.,  0.,  1.],
+       [ 1.,  0.,  0.],
+       [ 1.,  0.,  0.],
+       [ 0.,  1.,  0.]]), 
+array([[ 0.,  1.,  0.],
+       [ 1.,  0.,  0.],
+       [ 0.,  0.,  1.],
+       [ 1.,  0.,  0.]]), 
+array([[ 1.,  0.,  0.],
+       [ 0.,  1.,  0.],
+       [ 0.,  0.,  1.],
+       [ 1.,  0.,  0.]])], 
+1.0, 
+array([[ 0.5,  0.2,  0.3],
+       [ 0.5,  0.5,  0. ],
+       [ 0.8,  0. ,  0.2],
+       [ 0.2,  0.3,  0.5]])]
+>>> </code></pre>
+
+        
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;2&nbsp;3&nbsp;r&nbsp;d&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>      
+
+<pre><code>from PIL import Image
+import numpy as np
+from matplotlib import pyplot as plt
+
+i = Image.open('test_page.jpg').convert('L')
+a = np.asarray(i)
+
+threshold = 150
+im = i.point(lambda p: p > threshold and 255)
+b = np.asarray(im)
+
+plt.subplot(121), plt.imshow(a, cmap='gray')
+plt.subplot(122), plt.imshow(b)
+plt.show()</code></pre>      
+  
+       
+<div class="container">
+<img src="grey_binary.png" />
+</div>  
+   
+        
+ <p>
+<BIG>
+D&nbsp;E&nbsp;C&nbsp;E&nbsp;M&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;8&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>         
+  
+        <p>
+
+<a href="./problemset2notes.pdf"><em>Paper 2, Part 1, Problem set 2</em></a>.
+ 
+
+  
+</p>
+  
+        
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;2&nbsp;3&nbsp;r&nbsp;d&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+<p>
+
+<a href="./ProblemSet1Notes.pdf"><em>Paper 2, Part 1, Problem set 1</em></a>.
+ 
+
+  
+</p>
+  
+   <p>
+   
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;9&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+ 
+<div class="container">
+<img src="test_page.png" />
+</div> 
+
+  
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;7&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+ <font size="2">
+<pre><code>  
+#generalized_birkhoff_von_neumann.py decomposes a matrix into a weighted average of basis matrices with integer coefficients
+#satisfying imposed constraints. When the starting matrix is doubly stochastic and the basis matrices are restricted to
+#be permutation matrices, this is the classical birkhoff_von_neumann decomposition. Formally, we implement the algorithm 
+#identified in Budish, Che, Kojima, and Milgrom (2013). Thus, the constraint structure must form what they call a bihierarchy.
+#
+# Copyright 2017 Aubrey Clark.
+#
+# generalized_birkhoff_von_neumann is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+
+#: The current version of this package.
+__version__ = '0.0.1-dev'
+
+import networkx as nx
+import numpy as np
+import copy
+import itertools
+import math
+from pprint import pprint
+
+#numbers in some arrays will be rounded to the nearest integer if within the following tolerance
+tolerance = np.finfo(np.float).eps * 10
+
+#Example matrix and constraint structures. X is the matrix we wish to decompose into a weighted
+#average of basis matrices. constraint_structure is a dictionary whose keys are subsets of coordinates of the basis matrices
+#(the dimensions of which are the same as X) (e.g. frozenset({(0, 0), (0, 1), (0,2)})) refers to the (0,0),(0,1),(0,2) 
+#coordinates), and whose keys refer to the minimum and maximum sum of these entries in each of the basis matrices 
+#(e.g. the value (1,1) means that the coordinates that this value's key represents sum to exactly one in each 
+#of the basis matrices.)
+
+#X = np.array([[.5, .2,.3], [.5,.5, 0], [.8, 0, .2], [.2, .3, .5]])
+#constraint_structure = {frozenset({(0, 0), (0, 1), (0,2)}): (1,1), frozenset({(1, 0), (1, 1), (1,2)}):(1,1), frozenset({(2, 0), (2, 1), (2,2)}):(1,1), frozenset({(3, 0), (3, 1), (3,2)}):(1,1), frozenset({(0, 0), (1, 0), (2,0), (3,0)}):(1,2),  frozenset({(0, 1), (1, 1), (2,1), (3,1)}):(1,1), frozenset({(0, 2), (1, 2), (2,2), (3,2)}):(1,1), frozenset({(0, 0), (1, 0)}):(1,1)}
+
+#X = np.array([[.3, .7], [.7,.3]])
+#constraint_structure = {frozenset({(0, 1),(1,0)}): (1,1), frozenset({(1, 0),(1,1)}): (1,1)}
+
+#bihierarchy_test decomposes the constraint structure into a bihierarchy if it is one. if the constraint structure is not
+#a bihierarchy or the matrix X does not satisfy the constraint structure to begin with, then bihierarchy_test will tell you 
+#this. bihierarcyy_test shall be invoked by generalized_berkhoff_con_neumann_decomposition, and so the latter function
+#(which performs the decomposition) will also warn about these issues.
+
+def bihierarchy_test(X, constraint_structure):
+  for key, value in constraint_structure.items():
+    if sum([X[i] for i in key]) < value[0] or sum([X[i] for i in key]) > value[1]:
+      print("impossible constraint structure capacities")
+  C = []
+  for key, value in constraint_structure.items():
+    C.append(set(key))
+  permutations =  itertools.permutations(C)
+  for c in permutations:
+    listofA, listofB = [], []
+    for idx, x in enumerate(c):
+      if all( x < y or y < x or x.isdisjoint(y) for y in [c[i] for i in listofA]):
+        target = listofA
+      elif all(x < y or y < x or x.isdisjoint(y) for y in [c[i] for i in listofB]):
+        target = listofB
+      else:
+        break
+      target.append(idx)
+    if len(listofA) + len(listofB) == len(c):
+      return [[c[i] for i in listofA], [c[i] for i in listofB]]
+    else:
+      print("constraint structure cannot be decomposed into a bihierarchy")
+
+#generalized_birkhoff_von_neumann_iterator is the core step in the decomposition. After the starting matrix X and the
+#constraint structure have been represented as a weighted, directed graph G, this function takes as input a list H = [(G,p)]
+#(where p is a probability, which is initially one) and will decompose the graph into two such graphs, 
+#each with an associated probability, and each of which are closer to representing a basis matrix.
+#Seqential iteration, which is done in the main function generalized_birkhoff_von_neumann_decomposition, leads to the final
+#decomposition
+      
+def generalized_birkhoff_von_neumann_iterator(H):
+  tolerance = np.finfo(np.float).eps * 10
+  #
+  (G, p) = H.pop(0)
+  #
+  #remove edges with integer weights
+  #extracts all edges satisfy the weight threshold:
+  #
+  eligible_edges = [(from_node,to_node,edge_attributes) for from_node,to_node,edge_attributes in G.edges(data=True) if all(i+tolerance < edge_attributes['weight'] or edge_attributes['weight'] < i - tolerance for i in range(0,math.floor(sum(sum(X) ) ) ) ) ]
+  #
+  K = nx.DiGraph()
+  K.add_edges_from(eligible_edges)
+  #
+  #find a cycle and compute the push_forward and push_reverse probabilities and graphs
+  cycle = nx.find_cycle(K, orientation='ignore')
+  forward_weights = [(d['weight'],d['min_capacity'],d['max_capacity']) for (u,v,d) in K.edges(data=True) if (u,v,'forward') in cycle]
+  reverse_weights = [(d['weight'],d['min_capacity'],d['max_capacity']) for (u,v,d) in K.edges(data=True) if (u,v,'reverse') in cycle]
+  push_forward = min((x[2] - x[0] for x in forward_weights))
+  push_reverse = min((x[2] - x[0] for x in reverse_weights))
+  pull_forward = min((x[0] - x[1] for x in forward_weights))
+  pull_reverse = min((x[0] - x[1] for x in reverse_weights))
+  push_forward_pull_reverse = min(push_forward,pull_reverse)
+  push_reverse_pull_forward = min(pull_forward,push_reverse)
+  #
+  #Construct the push_forward_pull_reverse graph
+  #
+  G1 = copy.deepcopy(G)
+  for u,v,d in G1.edges(data=True):
+    if (u,v,'forward') in cycle:
+      d['weight']+=push_forward_pull_reverse
+    if (u,v,'reverse') in cycle:
+      d['weight']+=-push_forward_pull_reverse
+  #
+  #Construct the push_reverse_pull_forward graph
+  #
+  G2 = copy.deepcopy(G)
+  for u,v,d in G2.edges(data=True):
+    if (u,v,'reverse') in cycle:
+      d['weight']+=push_reverse_pull_forward
+    if (u,v,'forward') in cycle:
+      d['weight']+=-push_reverse_pull_forward
+  #
+  gamma = push_reverse_pull_forward/(push_forward_pull_reverse + push_reverse_pull_forward)
+  return([(G1,p*gamma), (G2,p*(1-gamma))])
+
+#generalized_birkhoff_von_neumann_decomposition takes the primitives, a starting matrix X (a numpy array) and
+#a constraint structure constraint_structure (a dictionary, whose structure is described in the examples above).
+#First, it applies bihierarchy_test to these primitives (see above for what this does). Then, if all is okay at the
+#first step, it represents these primitives as a weighted, directed graph and then iteratively applies 
+#generalized_birkhoff_von_neumann_iterator. Finally, it cleans the solution, transforming the
+#final iteration directed, weighted graphs to basis matrices, merging duplicate basis matrices and their probabilities,
+#checking that the probabilities form a distribution, and checking that the average of the basis matricies under this
+#distribution is indeed the starting matrix X
+
+def generalized_birkhoff_von_neumann_decomposition(X,constraint_structure):
+  #
+  tolerance = np.finfo(np.float).eps * 10
+  S = {index for index, x in np.ndenumerate(X)}
+  #
+  A,B = bihierarchy_test(constraint_structure)
+  A.append(S), B.append(S)
+  #
+  for x in S:
+    A.append({x}), B.append({x})
+  #
+  for x in S:
+    constraint_structure.update({frozenset({x}):(0,1)})
+  #
+  R1 = nx.DiGraph()
+  for x in A:
+    for y in A:
+      if x < y and not any(x < z < y for z in A):
+        R1.add_edge(frozenset(y),frozenset(x),weight=sum([X[i] for i in x]), min_capacity = constraint_structure[frozenset(x)][0], max_capacity = constraint_structure[frozenset(x)][1])
+  #
+  R2 = nx.DiGraph()
+  for x in B:
+    for y in B:
+      if y < x and not any(y < z < x for z in B):
+        R2.add_edge((frozenset(y),'p'),(frozenset(x),'p'),weight = sum( [X[i] for i in y]), min_capacity = constraint_structure[frozenset(y)][0], max_capacity = constraint_structure[frozenset(y)][1])
+  #
+  G = nx.compose(R1,R2)
+  #
+  for index, x in np.ndenumerate(X):
+    G.add_edge(frozenset({index}), (frozenset({index}),'p'), weight=x, min_capacity = 0, max_capacity = 1)
+  #
+  H=[(G,1)]
+  solution=[]
+  #
+  while len(H) > 0:
+    if any(tolerance < x < 1 - tolerance for x in [d['weight'] for (u,v,d) in H[0][0].edges(data=True) if u in [frozenset({x}) for x in S]]):
+      H.extend(generalized_birkhoff_von_neumann_iterator([H.pop(0)]))
+    else:
+      solution.append(H.pop(0))
+  #
+  solution_columns_and_probs = []
+  #
+  for y in solution:
+    solution_columns_and_probs.append([[(u,d['weight']) for (u,v,d) in y[0].edges(data=True) if u in [frozenset({x}) for x in S]],y[1]])
+  #
+  solution_zeroed = []
+  #
+  for z in solution_columns_and_probs:
+    list = []
+    for y in z[0]:
+      if y[1] < tolerance:
+        list.append((y[0],0))
+      elif y[1] > 1-tolerance:
+        list.append((y[0],1))
+    solution_zeroed.append([list,z[1]])
+  #
+  assgs = []
+  coeffs = []
+  #
+  for a in solution_zeroed:
+    Y = np.zeros(X.shape)
+    for x in a[0]:
+      for y in x[0]:
+        Y[y]=x[1]
+    assgs.append(Y)
+    coeffs.append(a[1])
+  #
+  list = []
+  #
+  for idx, x in enumerate(solution_zeroed):
+    if all(x[0]!= z[0] for z in [solution_zeroed[i] for i in list]):
+      list.append(idx)
+  #
+  solution_simplified = []
+  #
+  for i in list:
+    solution_simplified.append([solution_zeroed[i][0],sum([x[1] for x in solution_zeroed if x[0]==solution_zeroed[i][0]])])
+  #
+  assignments = []
+  coefficients = []
+  #
+  for a in solution_simplified:
+    Y = np.zeros(X.shape)
+    for x in a[0]:
+      for y in x[0]:
+        Y[y]=x[1]
+    assignments.append(Y)
+    coefficients.append(a[1])
+  #
+  pprint([coefficients, assignments, sum(coefficients), sum(i[1]*i[0] for i in zip(coefficients, assignments))])
+ </code></pre> </font>
+ 
+
+  <p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;4&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>  
+  
+<p>
+This transforms the assignments to <code>numpy</code> arrays and computes the expected assignment. There seems to be an issue though, because the expected assignment computed here is not equal to \(X\).
+</p>
+
+<font size="2">
+<pre><code>
+matrix_solution = []
+expected_assignment = []
+
+for a in solution_simplified:
+  Y = np.zeros((4,3))
+  for x in a[0]:
+    for y in x[0]:
+      Y[y]=x[1]
+  matrix_solution.append([Y,a[1]])
+  expected_assignment.append(a[1]*Y)
+
+sum(expected_assignment)
+</code>
+</pre>
+</font>
+  
+    
+    
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;3&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>  
+
+<p>
+This sets assignment probabilities to zero or one (rather than their approximate values of zero or one) and then combines identical assignments, adding their probabilitiies.
+</p>
+
+<font size="2">
+<pre><code>
+solution_columns_and_probs = []
+
+for y in solution:
+  solution_columns_and_probs.append([[(u,d['weight']) for (u,v,d) in y[0].edges(data=True) if u in [frozenset({x}) for x in S]],y[1]])
+
+solution_zeroed = []
+
+for z in solution_columns_and_probs:
+    list = []
+    for y in z[0]:
+      if y[1] < tolerance:
+        list.append((y[0],0))
+      elif y[1] > 1-tolerance:
+        list.append((y[0],1))
+    solution_zeroed.append([list,z[1]])
+  
+list = []
+
+for idx, x in enumerate(solution_zeroed):
+  if all(x[0] !=  z[0] for z in [solution_zeroed[i] for i in list]):
+      list.append(idx)
+     
+solution_simplified = []
+   
+for i in list:
+  solution_simplified.append([solution_zeroed[i][0],sum([x[1] for x in solution_zeroed if x[0]==solution_zeroed[i][0]])])
+</code>
+</pre>
+</font> 
+  
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;2&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>  
+    
+<p>
+This python code iterates <font size="2"><code>generalized_birkhoff_von_neumann_iterator()</code></font> until the central column of each graph is an assignment.
+</p>
+
+ 
+ <font size="2">
+<pre><code>
+solution=[]
+
+while len(H) > 0:
+  if any(tolerance < x < 1 - tolerance for x in [d['weight'] for (u,v,d) in H[0][0].edges(data=True) if u in [frozenset({x}) for x in S]]):
+    H.extend(generalized_birkhoff_von_neumann_iterator([H.pop(0)]))
+  else:
+    solution.append(H.pop(0))
+</code></pre></font>
+
+<p>
+I now want to merge duplicate allocations and their probabilities, check that the average of the assignments is the expected assignment \(X\), and to present the results in a readable form. Below are some pieces for doing this.
+</p>
+
+<font size="2">
+<pre><code>  
+solution_graphs = []
+
+for x in solution:
+  solution_graphs.append(x[0])
+
+solution_columns = []
+
+for y in solution_graphs:
+  solution_columns.append([(u,d['weight']) for (u,v,d) in y.edges(data=True) if u in [frozenset({x}) for x in S]])
+
+solution_columns_and_probs = []
+
+for y in solution:
+  solution_columns_and_probs.append([[(u,d['weight']) for (u,v,d) in y[0].edges(data=True) if u in [frozenset({x}) for x in S]],y[1]])
+</code>
+</pre>
+</font>
+
+<p>
+Is there a way to reduce the number of assignments? Would searching for the longest cycle do this?
+</p>  
+  
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;1&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+<p>
+The constraint structure is a dictionary whose keys are constraint sets and singleton object-agent pairs, and whose values are the corresponding tuples of minimum and maximum capacity.
+</p>
+
+  <font size="2">
+<pre><code>
+import networkx as nx
+import numpy as np
+import copy
+import itertools
+
+C = [{(0, 1), (1, 1)}, {(1, 0), (0, 0)}, {(0, 1), (0, 0), (1, 1)}, {(0, 1), (1, 0), (0, 0)}]
+X = np.array([[.4, .6], [.7, .9]])
+S = {index for index, x in np.ndenumerate(X)}
+constraint_structure_dict = {frozenset({(0, 1), (1, 1)}):(0,2), frozenset({(1, 0), (0, 0)}): (0,2), frozenset({(0, 1), (0, 0), (1, 1)}):(0,3), frozenset({(0, 1), (1, 0), (0, 0)}):(0,3)}
+
+#need to assign the min and max capacity attributes to every edge, except to and from whole set
+for x in S:
+  constraint_structure_dict.update({frozenset({x}):(0,1)})
+
+#takes the sets of a constraint structure and prints a bihierarchy if one exists
+
+def bihierarchy_test(C):
+  permutations =  itertools.permutations(C)
+  for c in permutations:
+    listofA, listofB = [], []
+    for idx, x in enumerate(c):
+      if all( x < y or y < x or x.isdisjoint(y) for y in [c[i] for i in listofA]):
+        target = listofA
+      elif all(x < y or y < x or x.isdisjoint(y) for y in [c[i] for i in listofB]):
+        targe = listofB
+      else:
+        break
+      target.append(idx)
+    if len(listofA) + len(listofB) == len(c):
+      return [[c[i] for i in listofA], [c[i] for i in listofB]]
+
+A,B = bihierarchy_test(C)
+A.append(S), B.append(S)
+
+for x in S:
+  A.append({x}), B.append({x})
+
+G1 = nx.DiGraph()
+for x in A:
+  for y in A:
+    if x < y and not any(x < z < y for z in A):
+      G1.add_edge(frozenset(y),frozenset(x),weight=sum([X[i] for i in x]), min_capacity = constraint_structure_dict[frozenset(x)][0], max_capacity = constraint_structure_dict[frozenset(x)][1])
+
+G2 = nx.DiGraph()
+for x in B:
+  for y in B:
+    if y < x and not any(y < z < x for z in B):
+      G2.add_edge((frozenset(y),'p'),(frozenset(x),'p'),weight = sum( [X[i] for i in y]), min_capacity = constraint_structure_dict[frozenset(y)][0], max_capacity = constraint_structure_dict[frozenset(y)][1])
+
+G = nx.compose(G1,G2)
+
+for index, x in np.ndenumerate(X):
+  G.add_edge(frozenset({index}), (frozenset({index}),'p'), weight=x, min_capacity = 0, max_capacity = 1)
+
+def generalized_birkhoff_von_neumann_iterator(H):
+  tolerance = np.finfo(np.float).eps * 10
+  (G, p) = H.pop(0)
+  #remove edges with integer weights
+  #extracts all edges satisfy the weight threshold (my_network is directed):
+  eligible_edges = [(from_node,to_node,edge_attributes) for from_node,to_node,edge_attributes in G.edges(data=True) if all(i+tolerance < edge_attributes['weight'] or edge_attributes['weight'] < i - tolerance for i in range(0,5))]
+  K = nx.DiGraph()
+  K.add_edges_from(eligible_edges)
+  #find a cycle and compute the push_forward and push_reverse probabilities and graphs
+  cycle = nx.find_cycle(K, orientation='ignore')
+  forward_weights = [(d['weight'],d['min_capacity'],d['max_capacity']) for (u,v,d) in K.edges(data=True) if (u,v,'forward') in cycle]
+  reverse_weights = [(d['weight'],d['min_capacity'],d['max_capacity']) for (u,v,d) in K.edges(data=True) if (u,v,'reverse') in cycle]
+  push_forward = min((x[2] - x[0] for x in forward_weights))
+  push_reverse = min((x[2] - x[0] for x in reverse_weights))
+  pull_forward = min((x[0] - x[1] for x in forward_weights))
+  pull_reverse = min((x[0] - x[1] for x in reverse_weights))
+  push_forward_pull_reverse = min(push_forward,pull_reverse)
+  push_reverse_pull_forward = min(pull_forward,push_reverse)
+  #Construct the push_forward_pull_reverse graph
+  G1 = copy.deepcopy(G)
+  for u,v,d in G1.edges(data=True):
+    if (u,v,'forward') in cycle:
+      d['weight']+=push_forward_pull_reverse
+    if (u,v,'reverse') in cycle:
+      d['weight']+=-push_forward_pull_reverse
+  #Construct the push_reverse_pull_forward graph
+  G2 = copy.deepcopy(G)
+  for u,v,d in G2.edges(data=True):
+    if (u,v,'reverse') in cycle:
+      d['weight']+=push_reverse_pull_forward
+    if (u,v,'forward') in cycle:
+      d['weight']+=-push_reverse_pull_forward
+  gamma = push_forward_pull_reverse/(push_forward_pull_reverse + push_reverse_pull_forward)
+  return([(G1,p*gamma), (G2,p*(1-gamma))])
+
+H=[(G,1)]
+generalized_birkhoff_von_neumann_iterator(H)
+</code>
+</pre>
+</font>
+
+  
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;1&nbsp;0&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+ <p>
+
+We now have the building blocks of python code to construct the directed graph from an expected assignment and constraint structure.
+
+<br>
+<br>
+
+The followinng will find a bihierarchy if one exists
+</p>
+
+<font size="2">
+<pre>
+<code>
+#takes the sets of a constraint structure and prints a bihierarchy if one exists
+#e.g. C = [{(0, 1), (1, 1)}, {(1, 0), (0, 0)}, {(0, 1), (0, 0), (1, 1)}, {(0, 1), (1, 0), (0, 0)}]
+
+import itertools
+pc = itertools.permutations(C)
+
+for c in pc:
+  listofA, listofB = [], []
+  for idx, x in enumerate(c):
+    if all(x.issubset(y) or y.issubset(x) or x.isdisjoint(y) for y in [c[i] for i in listofA]):
+      target = listofA
+    elif all(x.issubset(z) or z.issubset(x) or x.isdisjoint(z) for z in [c[i] for i in listofB]):
+      target = listofB
+    else:
+       print('stop')
+       break
+    target.append(idx)
+  if len(listofA) + len(listofB) == len(c):
+    print("A is %s and B is  %s  " % ([c[i] for i in listofA], [c[i] for i in listofB]))
+    break
+</code>
+</pre>
+</font>
+
+<p>
+Next we construct from the bihierarchy the two sides of the directed graph
+</p>
+
+<font size="2">
+<pre>
+<code>
+#first add to each hierarchy the full set of object-agent pairs S and the singleton object-agent pairs
+
+A.append(S), B.append(S)
+for x in S:
+  A.append({x}), B.append({x})
+  
+#construct each side of the directed graph
+  
+G1 = nx.DiGraph()
+for x in A:
+  for y in A:
+    if x < y and not any(x < z < y for z in A):
+      G1.add_edge(frozenset(y),frozenset(x))
+
+G2 = nx.DiGraph()
+for x in B:
+  for y in B:
+    if y < x and not any(y < z < x for z in B):
+      G2.add_edge((frozenset(y),'p'),(frozenset(x),'p'))
+
+#connect each side by combining G1 and G1 and construct the central column, adding weights using expected assignment X
+
+G = nx.compose(G1,G2)
+
+#now join the singleton object-agent edges and assign their weights
+#e.g. X = np.array([[1, 2], [3, 4]])
+
+for index, x in np.ndenumerate(X):
+  G.add_edge(frozenset({index}), (frozenset({index}),'p'), weight=x)
+</code>
+</pre>
+</font>
+
+<p>
+The final step is to use conservation of flow to fill in the remaining weights.
+</p>
+  
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;9&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+ 
+<p>
+
+This python code takes a list of sets and divides them into two groups. In the iteration, we take a set from the list and test if it is subset to or disjoint from all already collected sets <code>A</code>; if so it is added to <code>A</code>, if not  we do the same test with the already collected sets <code>B</code>. If the set can't be added to either <code>A</code> or <code>B</code>, 'stop' is printed. 
+
+<br>
+<br>
+
+If a bihierarchy exists, this procedure will not always find it, and the printing of 'stop' neither implies or is implied by the constraint structure not being bihierarchy. If we consider all orderings of a constraint structure that is a bihierarchy we will find one where all the elements of one piece of the bihierarchy come before all elements of the other. The procedure will find this bihierarchy. 
+</p>
+
+<font size="2">
+<pre>
+<code>
+C = [{(0, 1), (1, 1)}, {(1, 0), (0, 0)}, {(0, 1), (0, 0), (1, 1)}, {(0, 1), (1, 0), (0, 0)}]
+C.sort(key=len)
+C.reverse()
+A=[]
+B=[]
+
+for x in C:
+  if all(x.issubset(y) or y.issubset(x) or x.isdisjoint(y) for y in A):
+    A.append(x)  
+  elif all(x.issubset(z) or z.issubset(x) or x.isdisjoint(z) for z in B):
+    B.append(x)   
+  else:
+    print('stop')
+</code>
+</pre>
+</font>
+ 
+ 
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;8&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+<p>
+Given an expected assignment and constraint structure, want to construct a weighted directed graph from a source to a sink, first passing through nodes that are sets of object-agent pairs belonging to one piece of the bihierarchy, ordered by set inclusion from largest to smallest, and eventually reaching all nodes that are single object-agent pairs. The next part of the graph is its central column which passes from each singleton object-agent pair across to a replica node. The weight on this edge is the object-agent coordinate of the expected assignment. The graph then passes into the other piece of the bihierarchy, now entering small sets of object-agent pairs and then into their supersets, until terminally reaching the sink node. The source node is represented by the set of possible object-agent pairs, and the sink as its replica. Conservation of flow determines the edge weights.
+<br>
+<br>
+First construct the central column
+</p>
+
+<font size="2">
+<pre>
+<code>
+#implicitly use coordinates of X as labels for object-agent pairs
+
+#X is an np.array e.g. X = np.array([[1, 2], [3, 4]])
+
+D = nx.DiGraph()
+
+for index, x in np.ndenumerate(X):
+  D.add_edge(index, (index,'p'), weight=x)
+</code>
+</pre>
+</font>
+
+<p>
+Now construct the two sides of the column from the constraint structure. Upper and lower bounds of the constraint structure wil be used to determine the dlows. For now we will work with only the subsets of object-agent pairs. Need to organize these subsets into a bihierarchy if possible. 
+<br>
+<br>
+Start with two directed graphs and the list of subsets
+</p>
+
+<font size="2">
+<pre>
+<code>
+G1 = nx.DiGraph()
+G2 = nx.DiGraph()
+C
+
+#e.g. C = [{(0,0),(0,1),(1,1)}, {(0,1),(1,1)}, {(0,0),(1,0)}, {(0,0),(0,1),(1,0)}]
+</code>
+</pre>
+</font>
+
+Generate the full set of object-agent pairs
+
+<font size="2">
+<pre>
+<code>
+S = {index for index, x in np.ndenumerate(X)}
+</code>
+</pre>
+</font>
+
+<p>
+I see two options for proceeding. One is to stop this approach and just work with <code>C</code>, iteratively dividing it into two pieces according to the rules of biheirarchy. Two is to order <code>C</code> by cardinality and to apply the same approach as one but try to construct the pieces of the directed graph in the process of seeing if the constraint structure is a bihierarchy.
+</p>
+
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;7&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>  
+ 
+ <p> 
+One is given an expected assignment of objects to agents and a constraint structure specifying upper and lower bounds on the number of assignments per set of object-agent pairs. If the constraint structure is what <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a> call a <em>bihierarchy</em> then there exists a distribution over constraint abiding assignments that gives the expected assignment.
+<br>
+<br>
+The first step of this algorithm represents the expected assignment and constraint structure as a weighted directed graph. The second step recursively invokes an algorithim on this graph, below implemented in python as <font size="2"><code>generalized_birkhoff_von_neumann_iterator()</code></font>, that decomposes expected assignments into pairs of expected assignments that are eventually pure assignments.
+ </p>
+  
+<font size="2">
+<pre>
+<code>
+import networkx as nx
+import numpy as np
+import copy
+
+#start with a list H of graphs and their probabilities
+
+G = nx.DiGraph()
+G.add_edge('S','s1',weight=1)
+G.add_edge('S','w1',weight=0.3)
+G.add_edge('S','w4',weight=0.7)
+G.add_edge('w1','w1p',weight=0.3)
+G.add_edge('w1p','Sp',weight=0.3)
+G.add_edge('s1','w2',weight=0.7)
+G.add_edge('s1','w3',weight=0.3)
+G.add_edge('w2','w2p',weight=0.7)
+G.add_edge('w2p','Sp',weight=0.7)
+G.add_edge('w3','w3p',weight=0.3)
+G.add_edge('w3p','s2',weight=0.3)
+G.add_edge('s2','Sp',weight=1)
+G.add_edge('w4','w4p',weight=0.7)
+G.add_edge('w4p','s2',weight=0.7)
+H = [(G,1)]
+
+def generalized_birkhoff_von_neumann_iterator(H):
+
+  tolerance = np.finfo(np.float).eps * 10
+  
+  (G, p) = H.pop(0)
+
+  #remove integer weighted edges
+
+  e = [(u,v) for (u,v,d) in G.edges(data=True) if d['weight'] < tolerance or d['weight'] > 1-tolerance]
+  G.remove_edges_from(e)
+
+  #find a cycle and compute the push_forward and push_reverse probabilities and graphs
+
+  cycle = nx.find_cycle(G, orientation='ignore')
+  forward_weights = [d['weight'] for (u,v,d) in G.edges(data=True) if (u,v,'forward') in cycle]
+  reverse_weights = [d['weight'] for (u,v,d) in G.edges(data=True) if (u,v,'reverse') in cycle]
+  push_forward = 1 - max(forward_weights)
+  push_reverse = 1-max(reverse_weights)
+  pull_forward = min(forward_weights)
+  pull_reverse = min(reverse_weights)
+  push_forward_pull_reverse = min(push_forward,pull_reverse)
+  push_reverse_pull_forward = min(pull_forward,push_reverse)
+
+  #Construct the push_forward_pull_reverse graph
+
+  G1 = copy.deepcopy(G)
+  for u,v,d in G1.edges(data=True):
+    if (u,v,'forward') in cycle:
+      d['weight']+=push_forward_pull_reverse
+    if (u,v,'reverse') in cycle:
+      d['weight']+=-push_forward_pull_reverse
+      
+  #Construct the push_reverse_pull_forward graph
+
+  G2 = copy.deepcopy(G)
+  for u,v,d in G2.edges(data=True):
+    if (u,v,'reverse') in cycle:
+      d['weight']+=push_reverse_pull_forward
+    if (u,v,'forward') in cycle:
+      d['weight']+=-push_reverse_pull_forward
+
+  H.extend([(G1,p*push_forward_pull_reverse), (G2,p*push_reverse_pull_forward)])
+
+  return(H)
+</code>
+</pre>
+</font>
+
+
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;6&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+<p>
+
+Each of you has been assigned a number 1 through 9, and each time has been assigned a letter A, B, or C. Preferences for times are as follows
+  
+  
+<table align="center" style="width:50%">
+  <tr>
+    <th> </th>
+    <th>1</th>
+    <th>2</th>
+    <th>3</th>
+    <th>4</th>
+    <th>5</th>
+    <th>6</th>
+    <th>7</th>
+    <th>8</th>
+    <th>9</th>
+  </tr>
+  <tr>
+    <th>A</th>
+    <td>2</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>2</td>
+    <td>1</td>
+    <td>1</td>
+    <td>1</td>
+    <td>3</td>
+  </tr>
+  <tr>
+    <th>B</th>
+    <td>1</td>
+    <td>1</td>
+    <td>3</td>
+    <td>3</td>
+    <td>1</td>
+    <td>2</td>
+    <td>2</td>
+    <td>3</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <th>C</th>
+    <td>3</td>
+    <td>3</td>
+    <td>2</td>
+    <td>1</td>
+    <td>3</td>
+    <td>3</td>
+    <td>3</td>
+    <td>2</td>
+    <td>2</td>
+  </tr>
+</table>
+
+<br>
+
+I will now describe the mechanism used to assign each of you to a time. 
+<br>
+<br>
+Imagine that A, B, and C are actually cakes, each of size three. Individuals start eating their most preferred cake. Cake A is eaten by 3, 6, 7, and 8, cake B by 1, 2, 5, and 9, and cake C by 4. After 3/4 cake-eating time units, cakes A and B are finished, and 4 has eaten 3/4 units of cake C. All individuals but 4 now move to their second choice. Many, finding it no longer available, immediatly move to cake C. After 1/4 time, cake C is finished.
+<br>
+<br>
+Here, cake is an analogy for probability mass so each individual gets the following probabilities of being assigned to one of A, B, or C
+<br>
+<br>
+
+<table align="center" style="width:50%">
+  <tr>
+    <th> </th>
+    <th>1</th>
+    <th>2</th>
+    <th>3</th>
+    <th>4</th>
+    <th>5</th>
+    <th>6</th>
+    <th>7</th>
+    <th>8</th>
+    <th>9</th>
+  </tr>
+  <tr>
+    <th>A</th>
+    <td>0</td>
+    <td>0</td>
+    <td>3/4</td>
+    <td>0</td>
+    <td>0</td>
+    <td>3/4</td>
+    <td>3/4</td>
+    <td>3/4</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <th>B</th>
+    <td>3/4</td>
+    <td>3/4</td>
+    <td>0</td>
+    <td>0</td>
+    <td>3/4</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>3/4</td>
+  </tr>
+  <tr>
+    <th>C</th>
+    <td>1/4</td>
+    <td>1/4</td>
+    <td>1/4</td>
+    <td>1</td>
+    <td>1/4</td>
+    <td>1/4</td>
+    <td>1/4</td>
+    <td>1/4</td>
+    <td>1/4</td>
+  </tr>
+</table> 
+
+<br>
+
+
+Note that to achieve these probabilities we can't simply run a sequence of lotteries, one for each individual, since, for example, everyone might be assigned to C. What we have to do is run one lottery that assigns everyone at once. Fortunately, this is easily done by randomly selecting two individuals to join 4 at C. Everyone else gets their first choice. For example, if 8 and 9 were chosen then the allocation would be
+
+<br>
+<br>
+
+<table align="center" style="width:50%">
+  <tr>
+    <th> </th>
+    <th>1</th>
+    <th>2</th>
+    <th>3</th>
+    <th>4</th>
+    <th>5</th>
+    <th>6</th>
+    <th>7</th>
+    <th>8</th>
+    <th>9</th>
+  </tr>
+  <tr>
+    <th>A</th>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>1</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <th>B</th>
+    <td>1</td>
+    <td>1</td>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <th>C</th>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>1</td>
+  </tr>
+</table>
+
+<br>
+
+
+By randomly selecting two people in this way we are actually randomly selecting one of 28 assignments (the number of ways to choose two individuals from eight), each chosen with probability 1/28.
+
+<br>
+<br>
+
+This procedure is a generalized version of what is known as the <em>probabilistic serial mechanism</em>. See <a href="http://faculty.chicagobooth.edu/eric.budish/research/Budish-Che-Kojima-Milgrom-2013-AER.pdf">Budish, Che, Kojima, and Milgrom 2013</a>.
+</p>
+
+
+
+
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;5&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+<p>
+
+\[
+
+\gamma(d,\theta) = -\frac{1}{\pi(\theta)}\sum_{d',\theta}\frac{\partial^2 c(p)}{\partial p(d|\theta)\partial p(d'|\theta')}\lambda[d',\theta']
+
+\]
+
+Original explanation correct.
+<br><br>
+Types of problem with strong complementarities in information acquisiton. Set of stocks. If common stocks or stocks corellated in portfolios, can learn expected payoff for multiple decisions. Thus affect signal probability of one decision with learning about payoff of another.
+<br><br>
+Risk averse agent. Conjecture: make safe decision more risky rather than risky decision. Interaction with information acquisition. Limited liability infinite risk aversion at limit. Perhaps softer version previous explanation with Lagrange multiplier replaced by risk aversion. 
+</p>
+
+
+
+<p>
+<BIG>
+O&nbsp;C&nbsp;T&nbsp;O&nbsp;B&nbsp;E&nbsp;R&nbsp;&nbsp;&nbsp;4&nbsp;t&nbsp;h&nbsp;&nbsp;&nbsp;2&nbsp;0&nbsp;1&nbsp;7</BIG>
+</p>
+
+
+<p>
+Desire delta \(f(p)\) at stock price \(p\). Suppose \(f\) decreasing and \(0\) at the initial price \(\bar p\). 
+
+Take a sold put option on this stock with strike \(x\). Let \(g(p,x)\) denote the delta of this option. Likewise for a sold call option using \(h(p,x)\) and suppose their deltas as at expiry.
+
+At each strike \(x<\bar p\) sell \(-f'(x)\Delta\) put options (where \(\Delta\) is the distance between strikes), and at each strike \(x>\bar p\) sell \(-f'(x)\Delta\) call options. 
+
+At price \(p<\bar p\) delta of portfolio is
+    
+\[
+\sum_{\{i: p \leq x_i \leq \bar p\}} -f'(x_i) \Delta g(p,x_i) = \sum_{\{i: p \leq x_i \leq \bar p\}} -f'(x_i) \Delta, 
+\]
+  <br>  
+which converges as \(\Delta\) goes to \(0\) to \(\int_p^{\bar p} -f'(t)dt = f(p)\).
+
+For price \(p>\bar p\) 
+    
+\[
+\sum_{\{i: \bar p \leq x_i \leq p\}} -f'(x_i) \Delta h(p,x_i) = \sum_{\{i:\bar p \leq x_i \leq p\}} f'(x_i) \Delta, 
+\]
+  <br>  
+converges as \(\Delta\) goes to \(0\) to \(\int_{\bar p}^p f'(t)dt = f(p)\).
+
+For continuous strikes portfolio consists of infinitesimal quantity of each option.
+</p>
+  
+
+
+
+</section>
+    <script src="..javascripts/scale.fix.js"></script>
+    </div>
+  </body>
+</html>
